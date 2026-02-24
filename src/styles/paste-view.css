@@ -1,0 +1,40 @@
+#paste-view {
+  max-width: 720px;
+  margin: 80px auto;
+  padding: 0 24px;
+}
+
+#paste-view h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+#paste-view .subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+#json-input {
+  width: 100%;
+  height: 280px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  resize: vertical;
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+#paste-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  align-items: center;
+}
+
+#paste-error {
+  min-height: 22px;
+}

@@ -1,0 +1,97 @@
+#binding-panel {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  flex: 1;
+}
+
+#binding-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+#binding-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.editor-placeholder {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Binding Form */
+
+#binding-form {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+#binding-form[hidden] { display: none; }
+#binding-editor-placeholder[hidden] { display: none; }
+
+#binding-form .form-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+#binding-form label {
+  font-size: 13px;
+  font-weight: 500;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+#binding-form input, #binding-form select {
+  font-size: 13px;
+  padding: 5px 8px;
+}
+
+#bf-key {
+  width: 50px;
+  text-align: center;
+  text-transform: lowercase;
+  font-family: 'SF Mono', monospace;
+}
+
+#bf-type { width: 140px; }
+#bf-value { flex: 1; min-width: 120px; }
+
+#modifier-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+#modifier-row[hidden] { display: none; }
+
+#modifier-row label {
+  width: auto;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+#modifier-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+}
+
+#binding-form .form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+#bf-error {
+  min-height: 18px;
+}
