@@ -42,20 +42,6 @@
       <aside id="sublayer-panel">
         <div id="sublayer-panel-header">Layers</div>
         <div id="sublayer-list"></div>
-        <div id="add-sublayer-area">
-          <button class="btn-secondary btn-sm" id="btn-show-add-sl" style="width:100%">+ Add Sublayer</button>
-          <div id="add-sublayer-form" hidden>
-            <div class="row">
-              <input id="sl-key-input" maxlength="1" placeholder="Key">
-              <input id="sl-label-input" placeholder="Label (e.g. Open Apps)">
-            </div>
-            <div id="add-sl-error" class="error-msg"></div>
-            <div class="row">
-              <button class="btn-primary btn-sm" id="btn-create-sl">Create</button>
-              <button class="btn-secondary btn-sm" id="btn-cancel-sl">Cancel</button>
-            </div>
-          </div>
-        </div>
       </aside>
 
       <div id="main-panel">
@@ -82,10 +68,11 @@
                   <option value="app">Open App</option>
                   <option value="shell">Shell Command</option>
                   <option value="key">Key Combo</option>
+                  <option value="layer">Activate Layer</option>
                 </select>
               </div>
               <div class="form-row">
-                <label>Value</label>
+                <label id="bf-value-label">Value</label>
                 <input id="bf-value" placeholder="App name, command, or key_code">
               </div>
               <div class="form-row" id="modifier-row" hidden>

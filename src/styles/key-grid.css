@@ -93,3 +93,7 @@
 .key-cell.sublayer-activator:hover {
   box-shadow: 0 0 0 2px var(--accent-light);
 }
+
+.key-cell.selected {
+  box-shadow: 0 0 0 2px #000;
+}

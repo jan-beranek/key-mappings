@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: Display hierarchical tree navigation
 The system SHALL display a nested tree in the left panel with trigger keys at level 0, and both direct binding leaves and sublayer nodes at level 1. Sublayer nodes expand to show their binding leaves at level 2.
 
@@ -18,21 +20,6 @@ The system SHALL display a nested tree in the left panel with trigger keys at le
 - **WHEN** user loads a config with trigger key `caps_lock` that has 3 direct bindings and no sublayers
 - **THEN** the tree shows 3 binding leaves at level 1 directly under "Caps Lock"
 
-### Requirement: Expand and collapse tree nodes
-The system SHALL allow users to expand and collapse trigger key and sublayer nodes to show or hide their children.
-
-#### Scenario: Collapse an expanded sublayer
-- **WHEN** user clicks the expand/collapse toggle on an expanded sublayer node "O — Open Apps"
-- **THEN** the binding leaves under that sublayer are hidden and the toggle icon changes to indicate collapsed state
-
-#### Scenario: Expand a collapsed sublayer
-- **WHEN** user clicks the expand/collapse toggle on a collapsed sublayer node
-- **THEN** the binding leaves under that sublayer are shown and the toggle icon changes to indicate expanded state
-
-#### Scenario: Active trigger key auto-expanded
-- **WHEN** a config is loaded or trigger key is switched
-- **THEN** the active trigger key node SHALL be expanded and the inactive trigger key node SHALL be collapsed
-
 ### Requirement: Select binding from tree
 The system SHALL allow users to select an individual binding by clicking its leaf node in the tree, which opens the binding editor in the main panel. This applies to both direct binding leaves (level 1) and sublayer binding leaves (level 2).
 
@@ -44,27 +31,6 @@ The system SHALL allow users to select an individual binding by clicking its lea
 - **WHEN** user clicks the leaf node for binding "S — Safari" at level 2 under sublayer "O"
 - **THEN** that leaf node is visually highlighted as selected, and the binding editor panel shows the edit form for that binding
 
-### Requirement: Select sublayer from tree
-The system SHALL allow users to select a sublayer by clicking its node in the tree, updating the key grid to show that sublayer's bindings.
-
-#### Scenario: Click a sublayer node
-- **WHEN** user clicks the sublayer node "W — Window"
-- **THEN** that sublayer is selected, the key grid updates to show bindings for the "Window" sublayer, and no individual binding is selected
-
-### Requirement: Show binding details in tree leaves
-Each binding leaf node in the tree SHALL display the binding key and a short description of its action.
-
-#### Scenario: Display binding information
-- **WHEN** a sublayer "O" has bindings: key "s" (app: Safari), key "t" (shell: open -a Terminal)
-- **THEN** the leaf nodes show "S — Safari" and "T — open -a Terminal" respectively
-
-### Requirement: Empty state for sublayer with no bindings
-The system SHALL show an indicator when a sublayer has no bindings.
-
-#### Scenario: Sublayer with no bindings expanded
-- **WHEN** user expands a sublayer that has no bindings
-- **THEN** the tree shows a dimmed "No bindings" text under that sublayer node
-
 ### Requirement: Add binding from tree
 The system SHALL provide an "Add" action at the trigger level in the tree to create a new direct binding, since the "Direct" pseudo-layer no longer exists.
 
@@ -75,3 +41,9 @@ The system SHALL provide an "Add" action at the trigger level in the tree to cre
 #### Scenario: Add binding to sublayer via tree
 - **WHEN** user clicks the "+" button on a sublayer node in the tree
 - **THEN** the binding editor opens in "new binding" mode for that sublayer
+
+## REMOVED Requirements
+
+### Requirement: Direct pseudo-sublayer display
+**Reason**: The "Direct" pseudo-layer wrapper is removed. Direct bindings are now displayed as individual leaf nodes at level 1, making the tree flatter and simpler.
+**Migration**: Direct bindings appear directly under the trigger node. Clicking a trigger node still sets the key grid to show direct bindings. The "+" button for adding direct bindings moves to the trigger node.

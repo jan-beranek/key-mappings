@@ -1,7 +1,6 @@
 import { store, state, expandedNodes, KEY_ROWS } from './state.js';
 import { describeAction } from './serializer.js';
-import { openAddBinding, openEditBinding, closeBindingForm } from './binding-form.js';
-import { showConfirm } from './dialogs.js';
+import { openAddBinding, openEditBinding, openEditSublayer, closeBindingForm } from './binding-form.js';
 
 export function render() {
   renderTree();
@@ -14,8 +13,8 @@ export function renderTree() {
   container.innerHTML = '';
 
   const triggers = [
-    { key: 'caps_lock', label: 'Caps Lock' },
-    { key: 'tab', label: 'Tab' }
+    { key: 'tab', label: 'Tab', badge: 'TAB' },
+    { key: 'caps_lock', label: 'Caps Lock', badge: 'CAPS' }
   ];
 
   for (const trigger of triggers) {
@@ -23,9 +22,14 @@ export function renderTree() {
     const isExpanded = expandedNodes.has(triggerId);
     const triggerData = store.getTrigger(trigger.key);
 
-    const isTriggerSelected = state.selectedTrigger === trigger.key && state.selectedSublayer === null && state.selectedBinding === null;
+    const isTriggerActiveLayout = state.selectedTrigger === trigger.key && state.selectedSublayer === null;
     const triggerNode = document.createElement('div');
-    triggerNode.className = 'tree-node tree-node--level-0' + (isTriggerSelected ? ' tree-node--selected' : '');
+    triggerNode.className = 'tree-node tree-node--level-0' + (isTriggerActiveLayout ? ' tree-node--active-layout' : '');
+
+    const badge = document.createElement('span');
+    badge.className = 'tree-trigger-key';
+    badge.textContent = trigger.badge;
+    triggerNode.appendChild(badge);
 
     const chevron = document.createElement('span');
     chevron.className = 'tree-chevron' + (isExpanded ? ' tree-chevron--expanded' : '');
@@ -43,6 +47,21 @@ export function renderTree() {
     triggerLabel.textContent = trigger.label;
     triggerNode.appendChild(triggerLabel);
 
+    // "+" add direct binding button on trigger node
+    const addDirectBtn = document.createElement('button');
+    addDirectBtn.className = 'tree-add-btn';
+    addDirectBtn.textContent = '+';
+    addDirectBtn.title = 'Add direct binding';
+    addDirectBtn.onclick = e => {
+      e.stopPropagation();
+      state.selectedTrigger = trigger.key;
+      state.selectedSublayer = null;
+      if (!expandedNodes.has(triggerId)) expandedNodes.add(triggerId);
+      openAddBinding('');
+      render();
+    };
+    triggerNode.appendChild(addDirectBtn);
+
     triggerNode.onclick = () => {
       state.selectedTrigger = trigger.key;
       state.selectedSublayer = null;
@@ -56,8 +75,32 @@ export function renderTree() {
 
     if (!isExpanded) continue;
 
-    // Level 1: Direct pseudo-sublayer
-    renderSublayerNode(container, trigger.key, null, 'Direct', triggerData.directBindings);
+    // Level 1: Direct bindings as leaf nodes
+    for (const b of triggerData.directBindings) {
+      const leaf = document.createElement('div');
+      const isLeafEditing = state.editingBinding && state.editingBinding.key === b.key && state.selectedSublayer === null && state.selectedTrigger === trigger.key;
+      leaf.className = 'tree-node tree-node--level-1 tree-node--binding';
+
+      const bKey = document.createElement('span');
+      bKey.className = 'tree-binding-key' + (isLeafEditing ? ' tree-binding-key--selected' : '');
+      bKey.textContent = b.key.toUpperCase();
+      leaf.appendChild(bKey);
+
+      const bDesc = document.createElement('span');
+      bDesc.className = 'tree-binding-desc';
+      bDesc.textContent = describeAction(b);
+      leaf.appendChild(bDesc);
+
+      leaf.onclick = () => {
+        state.selectedTrigger = trigger.key;
+        state.selectedSublayer = null;
+        state.selectedBinding = b.key;
+        openEditBinding(b);
+        render();
+      };
+
+      container.appendChild(leaf);
+    }
 
     // Level 1: Sublayers
     for (const sl of triggerData.sublayers) {
@@ -69,10 +112,21 @@ export function renderTree() {
 function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings) {
   const nodeId = 'sublayer:' + triggerKey + ':' + (sublayerKey || '_direct');
   const isExpanded = expandedNodes.has(nodeId);
-  const isSelected = state.selectedTrigger === triggerKey && state.selectedSublayer === sublayerKey && state.selectedBinding === null;
+  const isEditingThisLayer = state.editingBinding && state.editingBinding.isLayer && state.editingBinding.key === sublayerKey && state.selectedTrigger === triggerKey;
+  const isActiveLayout = state.selectedTrigger === triggerKey && state.selectedSublayer === sublayerKey;
 
   const node = document.createElement('div');
-  node.className = 'tree-node tree-node--level-1' + (isSelected ? ' tree-node--selected' : '');
+  let nodeClass = 'tree-node tree-node--level-1';
+  if (isActiveLayout) nodeClass += ' tree-node--active-layout';
+  node.className = nodeClass;
+
+  // Key badge first (for vertical alignment with binding keys)
+  if (sublayerKey !== null) {
+    const keyEl = document.createElement('span');
+    keyEl.className = 'tree-key' + (isEditingThisLayer ? ' tree-key--selected' : '');
+    keyEl.textContent = sublayerKey;
+    node.appendChild(keyEl);
+  }
 
   // Chevron
   const chevron = document.createElement('span');
@@ -86,43 +140,11 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings)
   };
   node.appendChild(chevron);
 
-  // Key badge (for real sublayers)
-  if (sublayerKey !== null) {
-    const keyEl = document.createElement('span');
-    keyEl.className = 'tree-key';
-    keyEl.textContent = sublayerKey;
-    node.appendChild(keyEl);
-  }
-
-  // Label (or rename input)
-  if (state.renamingSublayer === sublayerKey && sublayerKey !== null) {
-    const input = document.createElement('input');
-    input.className = 'rename-input';
-    input.value = label;
-    input.style.flex = '1';
-    input.style.minWidth = '0';
-    input.onclick = e => e.stopPropagation();
-    input.onkeydown = e => {
-      if (e.key === 'Enter') {
-        store.renameSublayer(triggerKey, sublayerKey, input.value);
-        state.renamingSublayer = null;
-      } else if (e.key === 'Escape') {
-        state.renamingSublayer = null;
-        render();
-      }
-    };
-    input.onblur = () => {
-      store.renameSublayer(triggerKey, sublayerKey, input.value);
-      state.renamingSublayer = null;
-    };
-    node.appendChild(input);
-    requestAnimationFrame(() => { input.focus(); input.select(); });
-  } else {
-    const labelEl = document.createElement('span');
-    labelEl.className = 'tree-label';
-    labelEl.textContent = label;
-    node.appendChild(labelEl);
-  }
+  // Label
+  const labelEl = document.createElement('span');
+  labelEl.className = 'tree-label';
+  labelEl.textContent = label;
+  node.appendChild(labelEl);
 
   // Count
   const countEl = document.createElement('span');
@@ -130,31 +152,21 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings)
   countEl.textContent = bindings.length;
   node.appendChild(countEl);
 
-  // Actions (rename, delete) for real sublayers
-  if (sublayerKey !== null) {
-    const actions = document.createElement('span');
-    actions.className = 'tree-actions';
-
-    const renameBtn = document.createElement('button');
-    renameBtn.textContent = 'Rename';
-    renameBtn.onclick = e => { e.stopPropagation(); state.renamingSublayer = sublayerKey; render(); };
-    actions.appendChild(renameBtn);
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'del-btn';
-    delBtn.textContent = 'Del';
-    delBtn.onclick = e => {
-      e.stopPropagation();
-      showConfirm('Delete sublayer "' + label + '" and all its bindings?', () => {
-        if (state.selectedTrigger === triggerKey && state.selectedSublayer === sublayerKey) { state.selectedSublayer = null; state.selectedBinding = null; }
-        expandedNodes.delete(nodeId);
-        store.deleteSublayer(triggerKey, sublayerKey);
-      });
-    };
-    actions.appendChild(delBtn);
-
-    node.appendChild(actions);
-  }
+  // "Open" button to navigate into sublayer's keyboard layout
+  const openBtn = document.createElement('button');
+  openBtn.className = 'tree-add-btn';
+  openBtn.textContent = 'Open';
+  openBtn.title = 'Open layer keyboard layout';
+  openBtn.onclick = e => {
+    e.stopPropagation();
+    state.selectedTrigger = triggerKey;
+    state.selectedSublayer = sublayerKey;
+    state.selectedBinding = null;
+    closeBindingForm();
+    if (!expandedNodes.has(nodeId)) expandedNodes.add(nodeId);
+    render();
+  };
+  node.appendChild(openBtn);
 
   // "+" add binding button
   const addBtn = document.createElement('button');
@@ -171,12 +183,11 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings)
   };
   node.appendChild(addBtn);
 
-  // Click handler: select sublayer
+  // Click handler: open sublayer in binding editor
   node.onclick = () => {
     state.selectedTrigger = triggerKey;
-    state.selectedSublayer = sublayerKey;
-    state.selectedBinding = null;
-    closeBindingForm();
+    const sl = store.sublayers(triggerKey).find(s => s.key === sublayerKey);
+    if (sl) openEditSublayer(sl);
     if (!expandedNodes.has(nodeId)) expandedNodes.add(nodeId);
     render();
   };
@@ -193,11 +204,11 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings)
     } else {
       for (const b of bindings) {
         const leaf = document.createElement('div');
-        const isLeafSelected = state.selectedTrigger === triggerKey && state.selectedSublayer === sublayerKey && state.selectedBinding === b.key;
-        leaf.className = 'tree-node tree-node--level-2' + (isLeafSelected ? ' tree-node--selected' : '');
+        const isLeafEditing = state.editingBinding && state.editingBinding.key === b.key && state.selectedSublayer === sublayerKey && state.selectedTrigger === triggerKey;
+        leaf.className = 'tree-node tree-node--level-2';
 
         const bKey = document.createElement('span');
-        bKey.className = 'tree-binding-key';
+        bKey.className = 'tree-binding-key' + (isLeafEditing ? ' tree-binding-key--selected' : '');
         bKey.textContent = b.key.toUpperCase();
         leaf.appendChild(bKey);
 
@@ -244,6 +255,8 @@ export function renderKeyGrid() {
 
       const binding = bindingMap.get(k);
       const isSublayerActivator = isDirect && sublayerKeys.has(k);
+      const isEditing = state.editingBinding && state.editingBinding.key === k;
+      if (isEditing) cell.classList.add('selected');
 
       if (binding) {
         cell.classList.add('bound');
@@ -254,6 +267,7 @@ export function renderKeyGrid() {
         cell.onclick = () => {
           state.selectedBinding = binding.key;
           openEditBinding(binding);
+          renderKeyGrid();
         };
       } else if (isSublayerActivator) {
         cell.classList.add('sublayer-activator');
@@ -262,9 +276,9 @@ export function renderKeyGrid() {
         actionSpan.className = 'key-action';
         actionSpan.textContent = sl?.label || '';
         cell.appendChild(actionSpan);
-        cell.onclick = () => { state.selectedSublayer = k; state.selectedBinding = null; closeBindingForm(); render(); };
+        cell.onclick = () => { if (sl) openEditSublayer(sl); render(); };
       } else {
-        cell.onclick = () => openAddBinding(k);
+        cell.onclick = () => { openAddBinding(k); renderKeyGrid(); };
       }
 
       rowDiv.appendChild(cell);
@@ -276,7 +290,7 @@ export function renderKeyGrid() {
   const title = document.getElementById('key-grid-title');
   const triggerLabel = state.selectedTrigger === 'caps_lock' ? 'Caps Lock' : 'Tab';
   if (isDirect) {
-    title.textContent = triggerLabel + ' + Key (Direct Bindings)';
+    title.textContent = triggerLabel + ' + Key';
   } else {
     const sl = store.sublayers(state.selectedTrigger).find(s => s.key === state.selectedSublayer);
     title.textContent = sl ? triggerLabel + ' + ' + sl.key.toUpperCase() + ' + Key (' + sl.label + ')' : 'Key Bindings';

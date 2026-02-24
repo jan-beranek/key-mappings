@@ -7,7 +7,6 @@ export const state = {
   selectedSublayer: null,
   selectedBinding: null,
   editingBinding: null,
-  renamingSublayer: null,
 };
 
 export const expandedNodes = new Set();

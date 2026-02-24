@@ -3,7 +3,7 @@ import { createDefaultConfig } from './default-config.js';
 import { normalizeInput, parseRules } from './parser.js';
 import { serializeConfig } from './serializer.js';
 import { render } from './renderer.js';
-import { closeBindingForm, saveBinding, updateValuePlaceholder, clearModifierCheckboxes } from './binding-form.js';
+import { closeBindingForm, saveBinding, updateValuePlaceholder, clearModifierCheckboxes, deleteCurrentBinding } from './binding-form.js';
 import { showToast } from './dialogs.js';
 
 function showPasteView() {
@@ -22,11 +22,6 @@ function showEditorView() {
   expandedNodes.add('trigger:caps_lock');
   expandedNodes.add('trigger:tab');
   render();
-}
-
-function closeAddSublayerForm() {
-  document.getElementById('btn-show-add-sl').hidden = false;
-  document.getElementById('add-sublayer-form').hidden = true;
 }
 
 function init() {
@@ -79,50 +74,11 @@ function init() {
     showPasteView();
   });
 
-  // Add sublayer UI
-  document.getElementById('btn-show-add-sl').addEventListener('click', () => {
-    document.getElementById('btn-show-add-sl').hidden = true;
-    document.getElementById('add-sublayer-form').hidden = false;
-    document.getElementById('sl-key-input').value = '';
-    document.getElementById('sl-label-input').value = '';
-    document.getElementById('add-sl-error').textContent = '';
-    document.getElementById('sl-key-input').focus();
-  });
-
-  document.getElementById('btn-cancel-sl').addEventListener('click', closeAddSublayerForm);
-
-  document.getElementById('btn-create-sl').addEventListener('click', () => {
-    const key = document.getElementById('sl-key-input').value.toLowerCase().trim();
-    const label = document.getElementById('sl-label-input').value.trim();
-    const errorEl = document.getElementById('add-sl-error');
-
-    if (!key || key.length !== 1) {
-      errorEl.textContent = 'Key must be a single character.';
-      return;
-    }
-    if (!label) {
-      errorEl.textContent = 'Label is required.';
-      return;
-    }
-
-    const ok = store.addSublayer(state.selectedTrigger, key, label);
-    if (!ok) {
-      errorEl.textContent = 'Key "' + key.toUpperCase() + '" is already used.';
-      return;
-    }
-
-    state.selectedSublayer = key;
-    closeAddSublayerForm();
-  });
-
   // Binding form events
   document.getElementById('btn-save-binding').addEventListener('click', saveBinding);
   document.getElementById('btn-cancel-binding').addEventListener('click', closeBindingForm);
   document.getElementById('btn-delete-binding').addEventListener('click', () => {
-    if (state.editingBinding && !state.editingBinding.isNew) {
-      store.deleteBinding(state.selectedTrigger, state.selectedSublayer, state.editingBinding.key);
-      closeBindingForm();
-    }
+    deleteCurrentBinding();
   });
   document.getElementById('bf-type').addEventListener('change', (e) => {
     updateValuePlaceholder(e.target.value);
@@ -137,13 +93,6 @@ function init() {
     if (e.key === 'Enter') document.getElementById('bf-value').focus();
   });
 
-  // Enter key in add sublayer form
-  document.getElementById('sl-label-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('btn-create-sl').click();
-  });
-  document.getElementById('sl-key-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('sl-label-input').focus();
-  });
 }
 
 // Start
