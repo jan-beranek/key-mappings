@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Karabiner Hyper Key Editor</title>
+<title>KEKE - [HYPER] Key Editor for Karabiner-Elements</title>
 <style>
 :root {
   --bg: #f5f6f8;
@@ -170,31 +170,6 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
 }
 
-#hyper-config {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-left: 8px;
-}
-
-#hyper-config label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-#trigger-select {
-  padding: 3px 8px;
-  font-size: 13px;
-}
-
-#tap-action {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
 #header-actions {
   margin-left: auto;
   display: flex;
@@ -210,7 +185,7 @@ input:focus, select:focus, textarea:focus {
 /* Sublayer Panel */
 
 #sublayer-panel {
-  width: 220px;
+  width: 280px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
@@ -228,69 +203,154 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-secondary);
 }
 
-.sublayer-item {
+/* Tree nodes */
+
+.tree-node {
   display: flex;
   align-items: center;
-  padding: 8px 14px;
+  padding: 6px 10px;
   cursor: pointer;
   border-left: 3px solid transparent;
   transition: background 0.1s;
-  gap: 8px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: 13px;
+  white-space: nowrap;
 }
-.sublayer-item:hover { background: var(--bg); }
-.sublayer-item.selected {
+.tree-node:hover { background: var(--bg); }
+.tree-node--selected {
   background: var(--primary-light);
   border-left-color: var(--primary);
   font-weight: 500;
 }
 
-.sublayer-key {
+.tree-node--level-0 {
+  padding-left: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.tree-node--level-1 { padding-left: 28px; }
+.tree-node--level-2 { padding-left: 46px; font-size: 12px; }
+
+.tree-node--inactive {
+  opacity: 0.45;
+}
+.tree-node--inactive:hover {
+  opacity: 0.7;
+}
+
+.tree-chevron {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  color: var(--text-secondary);
+}
+.tree-chevron--expanded { transform: rotate(90deg); }
+
+.tree-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   font-family: 'SF Mono', monospace;
   text-transform: uppercase;
   flex-shrink: 0;
 }
 
-.sublayer-label {
+.tree-label {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
 }
 
-.sublayer-count {
-  font-size: 12px;
+.tree-count {
+  font-size: 11px;
   color: var(--text-secondary);
   flex-shrink: 0;
 }
 
-.sublayer-actions {
+.tree-actions {
   display: none;
   gap: 2px;
   flex-shrink: 0;
 }
-.sublayer-item:hover .sublayer-actions { display: flex; }
-.sublayer-item:hover .sublayer-count { display: none; }
+.tree-node:hover .tree-actions { display: flex; }
+.tree-node:hover .tree-count { display: none; }
 
-.sublayer-actions button {
+.tree-actions button {
   padding: 2px 4px;
-  font-size: 12px;
+  font-size: 11px;
   background: transparent;
   color: var(--text-secondary);
   border-radius: 3px;
 }
-.sublayer-actions button:hover { background: var(--border); color: var(--text); }
-.sublayer-actions .del-btn:hover { color: var(--danger); }
+.tree-actions button:hover { background: var(--border); color: var(--text); }
+.tree-actions .del-btn:hover { color: var(--danger); }
+
+.tree-add-btn {
+  display: none;
+  padding: 1px 5px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.tree-node:hover .tree-add-btn { display: inline-flex; }
+.tree-add-btn:hover { background: var(--border); color: var(--text); }
+
+.tree-empty {
+  padding: 4px 10px 4px 62px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.tree-binding-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'SF Mono', monospace;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.tree-binding-desc {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  min-width: 0;
+}
+
+/* Rename input */
+.rename-input {
+  font-size: 13px;
+  padding: 2px 6px;
+  width: 100%;
+  border: 1px solid var(--primary);
+  border-radius: 3px;
+}
 
 #add-sublayer-area {
   padding: 10px 14px;
@@ -303,6 +363,7 @@ input:focus, select:focus, textarea:focus {
   flex-direction: column;
   gap: 6px;
 }
+#add-sublayer-form[hidden] { display: none; }
 
 #add-sublayer-form .row {
   display: flex;
@@ -322,15 +383,6 @@ input:focus, select:focus, textarea:focus {
 }
 
 #sl-label-input { flex: 1; }
-
-/* Rename input */
-.rename-input {
-  font-size: 13px;
-  padding: 2px 6px;
-  width: 100%;
-  border: 1px solid var(--primary);
-  border-radius: 3px;
-}
 
 /* Main Panel */
 
@@ -432,13 +484,14 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px var(--accent-light);
 }
 
-/* Binding Panel */
+/* Binding Editor Panel */
 
 #binding-panel {
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   overflow: hidden;
+  flex: 1;
 }
 
 #binding-panel-header {
@@ -454,63 +507,8 @@ input:focus, select:focus, textarea:focus {
   font-weight: 600;
 }
 
-#binding-list {
-  min-height: 40px;
-}
-
-.binding-row {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  gap: 10px;
-  border-bottom: 1px solid var(--bg);
-  font-size: 14px;
-}
-.binding-row:last-child { border-bottom: none; }
-.binding-row:hover { background: var(--bg); }
-.binding-row { cursor: pointer; }
-
-.binding-key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--primary-light);
-  color: var(--primary);
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 700;
-  font-family: 'SF Mono', monospace;
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-
-.binding-type {
-  font-size: 12px;
-  color: var(--text-secondary);
-  width: 80px;
-  flex-shrink: 0;
-}
-
-.binding-value {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.binding-actions {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.1s;
-}
-.binding-row:hover .binding-actions { opacity: 1; }
-
-.empty-state {
-  padding: 24px 16px;
+.editor-placeholder {
+  padding: 40px 16px;
   text-align: center;
   color: var(--text-secondary);
   font-size: 14px;
@@ -523,6 +521,8 @@ input:focus, select:focus, textarea:focus {
   border-top: 1px solid var(--border);
   background: var(--bg);
 }
+#binding-form[hidden] { display: none; }
+#binding-editor-placeholder[hidden] { display: none; }
 
 #binding-form .form-row {
   display: flex;
@@ -558,6 +558,7 @@ input:focus, select:focus, textarea:focus {
   gap: 12px;
   align-items: center;
 }
+#modifier-row[hidden] { display: none; }
 
 #modifier-row label {
   width: auto;
@@ -640,7 +641,7 @@ input:focus, select:focus, textarea:focus {
 <div id="app">
   <!-- ========== Paste View ========== -->
   <div id="paste-view">
-    <h1>Karabiner Hyper Key Editor</h1>
+    <h1>[HYPER] Key Editor for Karabiner-Elements</h1>
     <p class="subtitle">Paste your karabiner.json or rules array, edit visually, copy the result.</p>
     <textarea id="json-input" placeholder='Paste your karabiner.json or complex_modifications rules array here...'></textarea>
     <div id="paste-error" class="error-msg"></div>
@@ -654,15 +655,6 @@ input:focus, select:focus, textarea:focus {
   <div id="editor-view" hidden>
     <header id="editor-header">
       <h1>Hyper Key Editor</h1>
-      <div id="hyper-config">
-        <label>Trigger:
-          <select id="trigger-select">
-            <option value="caps_lock">Caps Lock</option>
-            <option value="tab">Tab</option>
-          </select>
-        </label>
-        <span id="tap-action">Tap: Escape</span>
-      </div>
       <div id="header-actions">
         <button class="btn-primary btn-sm" id="btn-copy">Copy JSON</button>
         <button class="btn-secondary btn-sm" id="btn-start-over">Start Over</button>
@@ -697,36 +689,40 @@ input:focus, select:focus, textarea:focus {
 
         <div id="binding-panel">
           <div id="binding-panel-header">
-            <span id="binding-panel-title">Bindings</span>
-            <button class="btn-primary btn-sm" id="btn-add-binding">+ Add Binding</button>
+            <span id="binding-panel-title">Binding Editor</span>
+            <button class="btn-danger btn-sm" id="btn-delete-binding" hidden>Delete</button>
           </div>
-          <div id="binding-list"></div>
-          <div id="binding-form" hidden>
-            <div class="form-row">
-              <label>Key</label>
-              <input id="bf-key" maxlength="1" placeholder="Key">
-              <label>Type</label>
-              <select id="bf-type">
-                <option value="app">Open App</option>
-                <option value="shell">Shell Command</option>
-                <option value="key">Key Combo</option>
-              </select>
+          <div id="binding-editor-content">
+            <div id="binding-editor-placeholder" class="editor-placeholder">
+              Select a binding from the tree to edit, or click a key in the grid to add one.
             </div>
-            <div class="form-row">
-              <label>Value</label>
-              <input id="bf-value" placeholder="App name, command, or key_code">
-            </div>
-            <div class="form-row" id="modifier-row" hidden>
-              <label>Modifiers</label>
-              <label><input type="checkbox" id="mod-cmd" value="left_command"> Cmd</label>
-              <label><input type="checkbox" id="mod-ctrl" value="left_control"> Ctrl</label>
-              <label><input type="checkbox" id="mod-opt" value="left_option"> Opt</label>
-              <label><input type="checkbox" id="mod-shift" value="left_shift"> Shift</label>
-            </div>
-            <div id="bf-error" class="error-msg"></div>
-            <div class="form-actions">
-              <button class="btn-primary btn-sm" id="btn-save-binding">Save</button>
-              <button class="btn-secondary btn-sm" id="btn-cancel-binding">Cancel</button>
+            <div id="binding-form" hidden>
+              <div class="form-row">
+                <label>Key</label>
+                <input id="bf-key" maxlength="1" placeholder="Key">
+                <label>Type</label>
+                <select id="bf-type">
+                  <option value="app">Open App</option>
+                  <option value="shell">Shell Command</option>
+                  <option value="key">Key Combo</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>Value</label>
+                <input id="bf-value" placeholder="App name, command, or key_code">
+              </div>
+              <div class="form-row" id="modifier-row" hidden>
+                <label>Modifiers</label>
+                <label><input type="checkbox" id="mod-cmd" value="left_command"> Cmd</label>
+                <label><input type="checkbox" id="mod-ctrl" value="left_control"> Ctrl</label>
+                <label><input type="checkbox" id="mod-opt" value="left_option"> Opt</label>
+                <label><input type="checkbox" id="mod-shift" value="left_shift"> Shift</label>
+              </div>
+              <div id="bf-error" class="error-msg"></div>
+              <div class="form-actions">
+                <button class="btn-primary btn-sm" id="btn-save-binding">Save</button>
+                <button class="btn-secondary btn-sm" id="btn-cancel-binding">Cancel</button>
+              </div>
             </div>
           </div>
         </div>
@@ -753,60 +749,59 @@ class ConfigStore extends EventTarget {
     this._emit();
   }
 
-  get hyperKey() { return this.config?.hyperKey; }
-  get sublayers() { return this.config?.sublayers || []; }
-  get directBindings() { return this.config?.directBindings || []; }
+  get triggers() { return this.config?.triggers || {}; }
   get passThroughRules() { return this.config?.passThroughRules || []; }
-  get ruleSlots() { return this.config?.ruleSlots || []; }
 
-  setTriggerKey(triggerKey) {
-    const tapAction = triggerKey === 'tab' ? 'tab' : 'escape';
-    this.config.hyperKey = { triggerKey, tapAction };
-    this._emit();
+  getTrigger(triggerKey) {
+    return this.triggers[triggerKey] || { tapAction: '', sublayers: [], directBindings: [], ruleSlots: [] };
   }
 
-  addSublayer(key, label) {
+  sublayers(triggerKey) { return this.getTrigger(triggerKey).sublayers; }
+  directBindings(triggerKey) { return this.getTrigger(triggerKey).directBindings; }
+
+  addSublayer(triggerKey, key, label) {
     key = key.toLowerCase();
-    if (this.sublayers.some(s => s.key === key)) return false;
-    this.config.sublayers.push({ key, label, bindings: [] });
-    // Insert slot before first passthrough
-    const ptIdx = this.config.ruleSlots.findIndex(s => s.type === 'passthrough');
+    const t = this.triggers[triggerKey];
+    if (!t) return false;
+    if (t.sublayers.some(s => s.key === key)) return false;
+    t.sublayers.push({ key, label, bindings: [] });
+    const ptIdx = t.ruleSlots.findIndex(s => s.type === 'passthrough');
     const slot = { type: 'sublayer', key };
-    if (ptIdx >= 0) this.config.ruleSlots.splice(ptIdx, 0, slot);
-    else this.config.ruleSlots.push(slot);
+    if (ptIdx >= 0) t.ruleSlots.splice(ptIdx, 0, slot);
+    else t.ruleSlots.push(slot);
     this._emit();
     return true;
   }
 
-  deleteSublayer(key) {
-    this.config.sublayers = this.config.sublayers.filter(s => s.key !== key);
-    this.config.ruleSlots = this.config.ruleSlots.filter(
-      s => !(s.type === 'sublayer' && s.key === key)
-    );
+  deleteSublayer(triggerKey, key) {
+    const t = this.triggers[triggerKey];
+    if (!t) return;
+    t.sublayers = t.sublayers.filter(s => s.key !== key);
+    t.ruleSlots = t.ruleSlots.filter(s => !(s.type === 'sublayer' && s.key === key));
     this._emit();
   }
 
-  renameSublayer(key, label) {
-    const sl = this.config.sublayers.find(s => s.key === key);
+  renameSublayer(triggerKey, key, label) {
+    const sl = this.sublayers(triggerKey).find(s => s.key === key);
     if (sl) { sl.label = label; this._emit(); }
   }
 
-  _getBindings(sublayerKey) {
-    if (sublayerKey === null) return this.config.directBindings;
-    const sl = this.config.sublayers.find(s => s.key === sublayerKey);
+  _getBindings(triggerKey, sublayerKey) {
+    if (sublayerKey === null) return this.directBindings(triggerKey);
+    const sl = this.sublayers(triggerKey).find(s => s.key === sublayerKey);
     return sl ? sl.bindings : [];
   }
 
-  addBinding(sublayerKey, binding) {
-    const bindings = this._getBindings(sublayerKey);
+  addBinding(triggerKey, sublayerKey, binding) {
+    const bindings = this._getBindings(triggerKey, sublayerKey);
     if (bindings.some(b => b.key === binding.key)) return false;
     bindings.push(binding);
     this._emit();
     return true;
   }
 
-  updateBinding(sublayerKey, oldKey, binding) {
-    const bindings = this._getBindings(sublayerKey);
+  updateBinding(triggerKey, sublayerKey, oldKey, binding) {
+    const bindings = this._getBindings(triggerKey, sublayerKey);
     const idx = bindings.findIndex(b => b.key === oldKey);
     if (idx >= 0) {
       if (binding.key !== oldKey && bindings.some(b => b.key === binding.key)) return false;
@@ -817,11 +812,12 @@ class ConfigStore extends EventTarget {
     return false;
   }
 
-  deleteBinding(sublayerKey, bindingKey) {
+  deleteBinding(triggerKey, sublayerKey, bindingKey) {
     if (sublayerKey === null) {
-      this.config.directBindings = this.config.directBindings.filter(b => b.key !== bindingKey);
+      const t = this.triggers[triggerKey];
+      if (t) t.directBindings = t.directBindings.filter(b => b.key !== bindingKey);
     } else {
-      const sl = this.config.sublayers.find(s => s.key === sublayerKey);
+      const sl = this.sublayers(triggerKey).find(s => s.key === sublayerKey);
       if (sl) sl.bindings = sl.bindings.filter(b => b.key !== bindingKey);
     }
     this._emit();
@@ -838,12 +834,20 @@ class ConfigStore extends EventTarget {
 
 function createDefaultConfig() {
   return {
-    hyperKey: { triggerKey: 'caps_lock', tapAction: 'escape' },
-    sublayers: [],
-    directBindings: [],
-    passThroughRules: [],
-    ruleSlots: [{ type: 'hyper' }, { type: 'direct' }]
+    triggers: {
+      caps_lock: { tapAction: 'escape', sublayers: [], directBindings: [], ruleSlots: [{ type: 'hyper' }, { type: 'direct' }] },
+      tab: { tapAction: 'tab', sublayers: [], directBindings: [], ruleSlots: [{ type: 'hyper' }, { type: 'direct' }] }
+    },
+    passThroughRules: []
   };
+}
+
+function hyperVarName(triggerKey) {
+  return triggerKey === 'caps_lock' ? 'hyper' : 'hyper_' + triggerKey;
+}
+
+function sublayerVarPrefix(triggerKey) {
+  return hyperVarName(triggerKey) + '_sublayer_';
 }
 
 // ============================================================
@@ -878,42 +882,46 @@ function normalizeInput(text) {
 }
 
 function parseRules(rules) {
-  const config = {
-    hyperKey: null,
-    sublayers: [],
-    directBindings: [],
-    passThroughRules: [],
-    ruleSlots: []
-  };
+  const config = createDefaultConfig();
 
-  // Map from variable name to sublayer info
-  const sublayerMap = new Map(); // varName -> { key, label, bindings }
+  // Track which trigger key each hyper variable belongs to
+  // hyperVarToTrigger: 'hyper' -> 'caps_lock', 'hyper_tab' -> 'tab'
+  const hyperVarToTrigger = new Map();
 
   for (const rule of rules) {
     if (!rule.manipulators || !Array.isArray(rule.manipulators)) {
       config.passThroughRules.push(rule);
-      config.ruleSlots.push({ type: 'passthrough', index: config.passThroughRules.length - 1 });
       continue;
     }
 
     let ruleType = null;
+    let detectedTrigger = null;
     let sublayerKey = null;
     let sublayerVarName = null;
     let sublayerLabel = '';
+    let hyperVar = null;
 
     // First pass: identify rule type by scanning manipulators
     for (const m of rule.manipulators) {
       const setVars = getSetVariables(m);
       for (const sv of setVars) {
-        if (sv.name === 'hyper' && sv.value === 1) {
-          ruleType = 'hyper';
-          break;
+        // Hyper activator: sets a hyper* variable to 1 and has from.key_code
+        if (sv.name.match(/^hyper(_\w+)?$/) && sv.value === 1) {
+          const fromKey = m.from?.key_code;
+          if (fromKey === 'caps_lock' || fromKey === 'tab') {
+            ruleType = 'hyper';
+            detectedTrigger = fromKey;
+            hyperVar = sv.name;
+            break;
+          }
         }
-        const slMatch = sv.name.match(/^hyper_sublayer_(.+)$/);
+        // Sublayer activator
+        const slMatch = sv.name.match(/^(hyper(?:_\w+)?)_sublayer_(.+)$/);
         if (slMatch && sv.value === 1) {
           ruleType = 'sublayer';
+          hyperVar = slMatch[1];
           sublayerVarName = sv.name;
-          sublayerKey = m.from?.key_code || slMatch[1];
+          sublayerKey = m.from?.key_code || slMatch[2];
           sublayerLabel = extractSublayerLabel(rule.description || m.description || '', sublayerKey);
           break;
         }
@@ -921,71 +929,82 @@ function parseRules(rules) {
       if (ruleType) break;
     }
 
-    // Check for direct hyper bindings (no sublayer activator in the rule)
+    // Check for direct hyper bindings
     if (!ruleType) {
-      const hasHyperCondition = rule.manipulators.some(m => hasCondition(m, 'hyper', 1));
-      if (hasHyperCondition) ruleType = 'direct';
+      for (const [hVar] of hyperVarToTrigger) {
+        const hasCond = rule.manipulators.some(m => hasCondition(m, hVar, 1));
+        if (hasCond) {
+          ruleType = 'direct';
+          hyperVar = hVar;
+          break;
+        }
+      }
+      // Fallback: check for generic 'hyper' condition
+      if (!ruleType) {
+        const hasCond = rule.manipulators.some(m => hasCondition(m, 'hyper', 1));
+        if (hasCond) { ruleType = 'direct'; hyperVar = 'hyper'; }
+      }
     }
 
     if (ruleType === 'hyper') {
       const activator = rule.manipulators.find(m =>
-        getSetVariables(m).some(sv => sv.name === 'hyper' && sv.value === 1)
+        getSetVariables(m).some(sv => sv.name === hyperVar && sv.value === 1)
       );
       if (activator) {
-        const triggerKey = activator.from?.key_code || 'caps_lock';
-        let tapAction = 'escape';
+        let tapAction = detectedTrigger === 'tab' ? 'tab' : 'escape';
         if (activator.to_if_alone?.length) {
-          tapAction = activator.to_if_alone[0].key_code || 'escape';
+          tapAction = activator.to_if_alone[0].key_code || tapAction;
         }
-        config.hyperKey = { triggerKey, tapAction };
+        config.triggers[detectedTrigger].tapAction = tapAction;
+        hyperVarToTrigger.set(hyperVar, detectedTrigger);
+        // Mark hyper slot in this trigger's ruleSlots (replace default)
+        const t = config.triggers[detectedTrigger];
+        if (!t.ruleSlots.some(s => s.type === 'hyper')) {
+          t.ruleSlots.unshift({ type: 'hyper' });
+        }
       }
-      config.ruleSlots.push({ type: 'hyper' });
 
     } else if (ruleType === 'sublayer') {
+      // Determine which trigger key this sublayer belongs to
+      const triggerKey = hyperVarToTrigger.get(hyperVar) || (hyperVar === 'hyper' ? 'caps_lock' : 'tab');
+      const t = config.triggers[triggerKey];
+
       const bindings = [];
       for (const m of rule.manipulators) {
-        // Skip the sublayer activator itself
         if (getSetVariables(m).some(sv => sv.name === sublayerVarName && sv.value === 1)) continue;
-        // Check if this manipulator is conditioned on the sublayer
         if (hasCondition(m, sublayerVarName, 1)) {
           const binding = parseBinding(m);
           if (binding) bindings.push(binding);
         }
       }
       const sublayer = { key: sublayerKey, label: sublayerLabel, bindings };
-      config.sublayers.push(sublayer);
-      sublayerMap.set(sublayerVarName, sublayer);
-      config.ruleSlots.push({ type: 'sublayer', key: sublayerKey });
+      t.sublayers.push(sublayer);
+      t.ruleSlots.push({ type: 'sublayer', key: sublayerKey });
 
     } else if (ruleType === 'direct') {
+      const triggerKey = hyperVarToTrigger.get(hyperVar) || (hyperVar === 'hyper' ? 'caps_lock' : 'tab');
+      const t = config.triggers[triggerKey];
+
       for (const m of rule.manipulators) {
-        if (hasCondition(m, 'hyper', 1)) {
+        if (hasCondition(m, hyperVar, 1)) {
           const binding = parseBinding(m);
-          if (binding) config.directBindings.push(binding);
+          if (binding) t.directBindings.push(binding);
         }
       }
-      config.ruleSlots.push({ type: 'direct' });
+      if (!t.ruleSlots.some(s => s.type === 'direct')) {
+        t.ruleSlots.push({ type: 'direct' });
+      }
 
     } else {
       config.passThroughRules.push(rule);
-      config.ruleSlots.push({ type: 'passthrough', index: config.passThroughRules.length - 1 });
     }
   }
 
-  // Ensure we have at least a default hyper key
-  if (!config.hyperKey) {
-    config.hyperKey = { triggerKey: 'caps_lock', tapAction: 'escape' };
-    // Prepend hyper slot if not present
-    if (!config.ruleSlots.some(s => s.type === 'hyper')) {
-      config.ruleSlots.unshift({ type: 'hyper' });
-    }
-  }
-
-  // Ensure direct slot exists
-  if (!config.ruleSlots.some(s => s.type === 'direct')) {
-    const lastSl = config.ruleSlots.findLastIndex(s => s.type === 'sublayer');
-    const insertAt = lastSl >= 0 ? lastSl + 1 : config.ruleSlots.findIndex(s => s.type === 'hyper') + 1;
-    config.ruleSlots.splice(insertAt, 0, { type: 'direct' });
+  // Ensure each trigger has hyper and direct slots
+  for (const tk of ['caps_lock', 'tab']) {
+    const t = config.triggers[tk];
+    if (!t.ruleSlots.some(s => s.type === 'hyper')) t.ruleSlots.unshift({ type: 'hyper' });
+    if (!t.ruleSlots.some(s => s.type === 'direct')) t.ruleSlots.push({ type: 'direct' });
   }
 
   return config;
@@ -1058,62 +1077,70 @@ function parseBinding(manipulator) {
 function serializeConfig(config) {
   const rules = [];
 
-  for (const slot of config.ruleSlots) {
-    switch (slot.type) {
-      case 'hyper':
-        rules.push(serializeHyperKey(config.hyperKey));
-        break;
-      case 'sublayer': {
-        const sl = config.sublayers.find(s => s.key === slot.key);
-        if (sl) rules.push(serializeSublayer(sl, config.sublayers));
-        break;
+  // Serialize each trigger key's rules
+  for (const triggerKey of ['caps_lock', 'tab']) {
+    const t = config.triggers[triggerKey];
+    if (!t) continue;
+    const hVar = hyperVarName(triggerKey);
+    const slPrefix = sublayerVarPrefix(triggerKey);
+    const hasData = t.sublayers.length > 0 || t.directBindings.length > 0;
+
+    for (const slot of t.ruleSlots) {
+      switch (slot.type) {
+        case 'hyper':
+          if (hasData) rules.push(serializeHyperKey(triggerKey, t.tapAction, hVar));
+          break;
+        case 'sublayer': {
+          const sl = t.sublayers.find(s => s.key === slot.key);
+          if (sl) rules.push(serializeSublayer(sl, t.sublayers, hVar, slPrefix));
+          break;
+        }
+        case 'direct':
+          if (t.directBindings.length > 0) {
+            rules.push(serializeDirectBindings(t.directBindings, hVar));
+          }
+          break;
       }
-      case 'direct':
-        if (config.directBindings.length > 0) {
-          rules.push(serializeDirectBindings(config.directBindings));
-        }
-        break;
-      case 'passthrough':
-        if (config.passThroughRules[slot.index]) {
-          rules.push(config.passThroughRules[slot.index]);
-        }
-        break;
     }
+  }
+
+  // Passthrough rules
+  for (const ptr of config.passThroughRules) {
+    rules.push(ptr);
   }
 
   return rules;
 }
 
-function serializeHyperKey(hyperKey) {
+function serializeHyperKey(triggerKey, tapAction, hVar) {
+  const label = triggerKey === 'caps_lock' ? 'Caps Lock' : 'Tab';
   return {
-    description: `Hyper Key (${hyperKey.triggerKey === 'caps_lock' ? 'Caps Lock' : 'Tab'})`,
+    description: 'Hyper Key (' + label + ')',
     manipulators: [{
       type: 'basic',
       from: {
-        key_code: hyperKey.triggerKey,
+        key_code: triggerKey,
         modifiers: { optional: ['any'] }
       },
-      to: [{ set_variable: { name: 'hyper', value: 1 } }],
-      to_if_alone: [{ key_code: hyperKey.tapAction }],
-      to_after_key_up: [{ set_variable: { name: 'hyper', value: 0 } }]
+      to: [{ set_variable: { name: hVar, value: 1 } }],
+      to_if_alone: [{ key_code: tapAction }],
+      to_after_key_up: [{ set_variable: { name: hVar, value: 0 } }]
     }]
   };
 }
 
-function serializeSublayer(sublayer, allSublayers) {
-  const varName = 'hyper_sublayer_' + sublayer.key;
+function serializeSublayer(sublayer, allSublayers, hVar, slPrefix) {
+  const varName = slPrefix + sublayer.key;
 
-  // Build mutual exclusion conditions
-  const conditions = [{ type: 'variable_if', name: 'hyper', value: 1 }];
+  const conditions = [{ type: 'variable_if', name: hVar, value: 1 }];
   for (const other of allSublayers) {
     if (other.key !== sublayer.key) {
-      conditions.push({ type: 'variable_if', name: 'hyper_sublayer_' + other.key, value: 0 });
+      conditions.push({ type: 'variable_if', name: slPrefix + other.key, value: 0 });
     }
   }
 
   const manipulators = [];
 
-  // Sublayer activator
   manipulators.push({
     type: 'basic',
     description: 'Activate sublayer ' + sublayer.key.toUpperCase(),
@@ -1126,7 +1153,6 @@ function serializeSublayer(sublayer, allSublayers) {
     to_after_key_up: [{ set_variable: { name: varName, value: 0 } }]
   });
 
-  // Bindings
   for (const binding of sublayer.bindings) {
     manipulators.push({
       type: 'basic',
@@ -1146,11 +1172,11 @@ function serializeSublayer(sublayer, allSublayers) {
   };
 }
 
-function serializeDirectBindings(bindings) {
+function serializeDirectBindings(bindings, hVar) {
   const manipulators = bindings.map(binding => ({
     type: 'basic',
     description: 'Hyper + ' + binding.key.toUpperCase() + ' -> ' + describeAction(binding),
-    conditions: [{ type: 'variable_if', name: 'hyper', value: 1 }],
+    conditions: [{ type: 'variable_if', name: hVar, value: 1 }],
     from: {
       key_code: binding.key,
       modifiers: { optional: ['any'] }
@@ -1214,9 +1240,12 @@ function formatActionType(type) {
 // ============================================================
 
 const store = new ConfigStore();
+let selectedTrigger = 'caps_lock'; // which trigger key tree is active
 let selectedSublayer = null; // null = direct, string = sublayer key
+let selectedBinding = null;  // null | binding key string
 let editingBinding = null;   // null | { key, isNew }
 let renamingSublayer = null;  // null | sublayer key
+let expandedNodes = new Set(); // e.g. "trigger:caps_lock", "sublayer:caps_lock:o"
 
 // ============================================================
 // Key Grid Layout
@@ -1234,63 +1263,108 @@ const KEY_ROWS = [
 // ============================================================
 
 function render() {
-  renderSublayerList();
+  renderTree();
   renderKeyGrid();
-  renderBindingList();
-  renderHyperConfig();
+  renderBindingEditor();
 }
 
-function renderHyperConfig() {
-  const hk = store.hyperKey;
-  if (!hk) return;
-  document.getElementById('trigger-select').value = hk.triggerKey;
-  document.getElementById('tap-action').textContent =
-    'Tap: ' + (hk.tapAction === 'escape' ? 'Escape' : hk.tapAction === 'tab' ? 'Tab' : hk.tapAction);
-}
-
-function renderSublayerList() {
+function renderTree() {
   const container = document.getElementById('sublayer-list');
   container.innerHTML = '';
 
-  // Direct pseudo-sublayer
-  const directItem = createSublayerItem(null, 'Direct', store.directBindings.length, null);
-  if (selectedSublayer === null) directItem.classList.add('selected');
-  container.appendChild(directItem);
+  const triggers = [
+    { key: 'caps_lock', label: 'Caps Lock' },
+    { key: 'tab', label: 'Tab' }
+  ];
 
-  // Sublayers
-  for (const sl of store.sublayers) {
-    const item = createSublayerItem(sl.key, sl.label, sl.bindings.length, sl.key);
-    if (selectedSublayer === sl.key) item.classList.add('selected');
-    container.appendChild(item);
+  for (const trigger of triggers) {
+    const triggerId = 'trigger:' + trigger.key;
+    const isExpanded = expandedNodes.has(triggerId);
+    const triggerData = store.getTrigger(trigger.key);
+
+    // Level 0: trigger key node
+    const isTriggerSelected = selectedTrigger === trigger.key && selectedSublayer === null && selectedBinding === null;
+    const triggerNode = document.createElement('div');
+    triggerNode.className = 'tree-node tree-node--level-0' + (isTriggerSelected ? ' tree-node--selected' : '');
+
+    const chevron = document.createElement('span');
+    chevron.className = 'tree-chevron' + (isExpanded ? ' tree-chevron--expanded' : '');
+    chevron.textContent = '\u25B6';
+    chevron.onclick = e => {
+      e.stopPropagation();
+      if (isExpanded) expandedNodes.delete(triggerId);
+      else expandedNodes.add(triggerId);
+      renderTree();
+    };
+    triggerNode.appendChild(chevron);
+
+    const triggerLabel = document.createElement('span');
+    triggerLabel.className = 'tree-label';
+    triggerLabel.textContent = trigger.label;
+    triggerNode.appendChild(triggerLabel);
+
+    triggerNode.onclick = () => {
+      selectedTrigger = trigger.key;
+      selectedSublayer = null;
+      selectedBinding = null;
+      closeBindingForm();
+      if (!isExpanded) expandedNodes.add(triggerId);
+      render();
+    };
+
+    container.appendChild(triggerNode);
+
+    if (!isExpanded) continue;
+
+    // Level 1: Direct pseudo-sublayer
+    renderSublayerNode(container, trigger.key, null, 'Direct', triggerData.directBindings);
+
+    // Level 1: Sublayers
+    for (const sl of triggerData.sublayers) {
+      renderSublayerNode(container, trigger.key, sl.key, sl.label, sl.bindings);
+    }
   }
 }
 
-function createSublayerItem(key, label, count, sublayerKey) {
-  const div = document.createElement('div');
-  div.className = 'sublayer-item';
-  div.onclick = () => { selectedSublayer = sublayerKey; closeBindingForm(); render(); };
+function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings) {
+  const nodeId = 'sublayer:' + triggerKey + ':' + (sublayerKey || '_direct');
+  const isExpanded = expandedNodes.has(nodeId);
+  const isSelected = selectedTrigger === triggerKey && selectedSublayer === sublayerKey && selectedBinding === null;
 
-  if (key !== null) {
+  const node = document.createElement('div');
+  node.className = 'tree-node tree-node--level-1' + (isSelected ? ' tree-node--selected' : '');
+
+  // Chevron
+  const chevron = document.createElement('span');
+  chevron.className = 'tree-chevron' + (isExpanded ? ' tree-chevron--expanded' : '');
+  chevron.textContent = '\u25B6';
+  chevron.onclick = e => {
+    e.stopPropagation();
+    if (isExpanded) expandedNodes.delete(nodeId);
+    else expandedNodes.add(nodeId);
+    renderTree();
+  };
+  node.appendChild(chevron);
+
+  // Key badge (for real sublayers)
+  if (sublayerKey !== null) {
     const keyEl = document.createElement('span');
-    keyEl.className = 'sublayer-key';
-    keyEl.textContent = key;
-    div.appendChild(keyEl);
-  } else {
-    const icon = document.createElement('span');
-    icon.className = 'sublayer-key';
-    icon.textContent = '*';
-    icon.style.fontSize = '16px';
-    div.appendChild(icon);
+    keyEl.className = 'tree-key';
+    keyEl.textContent = sublayerKey;
+    node.appendChild(keyEl);
   }
 
+  // Label (or rename input)
   if (renamingSublayer === sublayerKey && sublayerKey !== null) {
     const input = document.createElement('input');
     input.className = 'rename-input';
     input.value = label;
+    input.style.flex = '1';
+    input.style.minWidth = '0';
     input.onclick = e => e.stopPropagation();
     input.onkeydown = e => {
       if (e.key === 'Enter') {
-        store.renameSublayer(sublayerKey, input.value);
+        store.renameSublayer(triggerKey, sublayerKey, input.value);
         renamingSublayer = null;
       } else if (e.key === 'Escape') {
         renamingSublayer = null;
@@ -1298,26 +1372,28 @@ function createSublayerItem(key, label, count, sublayerKey) {
       }
     };
     input.onblur = () => {
-      store.renameSublayer(sublayerKey, input.value);
+      store.renameSublayer(triggerKey, sublayerKey, input.value);
       renamingSublayer = null;
     };
-    div.appendChild(input);
+    node.appendChild(input);
     requestAnimationFrame(() => { input.focus(); input.select(); });
   } else {
     const labelEl = document.createElement('span');
-    labelEl.className = 'sublayer-label';
+    labelEl.className = 'tree-label';
     labelEl.textContent = label;
-    div.appendChild(labelEl);
+    node.appendChild(labelEl);
   }
 
+  // Count
   const countEl = document.createElement('span');
-  countEl.className = 'sublayer-count';
-  countEl.textContent = count;
-  div.appendChild(countEl);
+  countEl.className = 'tree-count';
+  countEl.textContent = bindings.length;
+  node.appendChild(countEl);
 
+  // Actions (rename, delete) for real sublayers
   if (sublayerKey !== null) {
     const actions = document.createElement('span');
-    actions.className = 'sublayer-actions';
+    actions.className = 'tree-actions';
 
     const renameBtn = document.createElement('button');
     renameBtn.textContent = 'Rename';
@@ -1330,16 +1406,79 @@ function createSublayerItem(key, label, count, sublayerKey) {
     delBtn.onclick = e => {
       e.stopPropagation();
       showConfirm('Delete sublayer "' + label + '" and all its bindings?', () => {
-        if (selectedSublayer === sublayerKey) selectedSublayer = null;
-        store.deleteSublayer(sublayerKey);
+        if (selectedTrigger === triggerKey && selectedSublayer === sublayerKey) { selectedSublayer = null; selectedBinding = null; }
+        expandedNodes.delete(nodeId);
+        store.deleteSublayer(triggerKey, sublayerKey);
       });
     };
     actions.appendChild(delBtn);
 
-    div.appendChild(actions);
+    node.appendChild(actions);
   }
 
-  return div;
+  // "+" add binding button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tree-add-btn';
+  addBtn.textContent = '+';
+  addBtn.title = 'Add binding';
+  addBtn.onclick = e => {
+    e.stopPropagation();
+    selectedTrigger = triggerKey;
+    selectedSublayer = sublayerKey;
+    if (!expandedNodes.has(nodeId)) expandedNodes.add(nodeId);
+    openAddBinding('');
+    render();
+  };
+  node.appendChild(addBtn);
+
+  // Click handler: select sublayer
+  node.onclick = () => {
+    selectedTrigger = triggerKey;
+    selectedSublayer = sublayerKey;
+    selectedBinding = null;
+    closeBindingForm();
+    // Auto-expand
+    if (!expandedNodes.has(nodeId)) expandedNodes.add(nodeId);
+    render();
+  };
+
+  container.appendChild(node);
+
+  // Level 2: Binding leaves (if expanded)
+  if (isExpanded) {
+    if (bindings.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'tree-empty';
+      empty.textContent = 'No bindings';
+      container.appendChild(empty);
+    } else {
+      for (const b of bindings) {
+        const leaf = document.createElement('div');
+        const isLeafSelected = selectedTrigger === triggerKey && selectedSublayer === sublayerKey && selectedBinding === b.key;
+        leaf.className = 'tree-node tree-node--level-2' + (isLeafSelected ? ' tree-node--selected' : '');
+
+        const bKey = document.createElement('span');
+        bKey.className = 'tree-binding-key';
+        bKey.textContent = b.key.toUpperCase();
+        leaf.appendChild(bKey);
+
+        const bDesc = document.createElement('span');
+        bDesc.className = 'tree-binding-desc';
+        bDesc.textContent = describeAction(b);
+        leaf.appendChild(bDesc);
+
+        leaf.onclick = () => {
+          selectedTrigger = triggerKey;
+          selectedSublayer = sublayerKey;
+          selectedBinding = b.key;
+          openEditBinding(b);
+          render();
+        };
+
+        container.appendChild(leaf);
+      }
+    }
+  }
 }
 
 function renderKeyGrid() {
@@ -1348,7 +1487,7 @@ function renderKeyGrid() {
 
   const bindings = getCurrentBindings();
   const bindingMap = new Map(bindings.map(b => [b.key, b]));
-  const sublayerKeys = new Set(store.sublayers.map(s => s.key));
+  const sublayerKeys = new Set(store.sublayers(selectedTrigger).map(s => s.key));
   const isDirect = selectedSublayer === null;
 
   for (const row of KEY_ROWS) {
@@ -1373,15 +1512,18 @@ function renderKeyGrid() {
         actionSpan.className = 'key-action';
         actionSpan.textContent = describeAction(binding);
         cell.appendChild(actionSpan);
-        cell.onclick = () => openEditBinding(binding);
+        cell.onclick = () => {
+          selectedBinding = binding.key;
+          openEditBinding(binding);
+        };
       } else if (isSublayerActivator) {
         cell.classList.add('sublayer-activator');
-        const sl = store.sublayers.find(s => s.key === k);
+        const sl = store.sublayers(selectedTrigger).find(s => s.key === k);
         const actionSpan = document.createElement('span');
         actionSpan.className = 'key-action';
         actionSpan.textContent = sl?.label || '';
         cell.appendChild(actionSpan);
-        cell.onclick = () => { selectedSublayer = k; closeBindingForm(); render(); };
+        cell.onclick = () => { selectedSublayer = k; selectedBinding = null; closeBindingForm(); render(); };
       } else {
         cell.onclick = () => openAddBinding(k);
       }
@@ -1393,83 +1535,33 @@ function renderKeyGrid() {
 
   // Update grid title
   const title = document.getElementById('key-grid-title');
+  const triggerLabel = selectedTrigger === 'caps_lock' ? 'Caps Lock' : 'Tab';
   if (isDirect) {
-    title.textContent = 'Hyper + Key (Direct Bindings)';
+    title.textContent = triggerLabel + ' + Key (Direct Bindings)';
   } else {
-    const sl = store.sublayers.find(s => s.key === selectedSublayer);
-    title.textContent = sl ? 'Hyper + ' + sl.key.toUpperCase() + ' + Key (' + sl.label + ')' : 'Key Bindings';
+    const sl = store.sublayers(selectedTrigger).find(s => s.key === selectedSublayer);
+    title.textContent = sl ? triggerLabel + ' + ' + sl.key.toUpperCase() + ' + Key (' + sl.label + ')' : 'Key Bindings';
   }
 }
 
-function renderBindingList() {
-  const container = document.getElementById('binding-list');
-  container.innerHTML = '';
-
-  const bindings = getCurrentBindings();
-  const title = document.getElementById('binding-panel-title');
-
-  if (selectedSublayer === null) {
-    title.textContent = 'Direct Hyper Bindings';
-  } else {
-    const sl = store.sublayers.find(s => s.key === selectedSublayer);
-    title.textContent = sl ? sl.label + ' Bindings' : 'Bindings';
-  }
-
-  if (bindings.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'empty-state';
-    empty.textContent = 'No bindings yet. Click a key or use "+ Add Binding".';
-    container.appendChild(empty);
-    return;
-  }
-
-  for (const b of bindings) {
-    const row = document.createElement('div');
-    row.className = 'binding-row';
-    row.onclick = () => openEditBinding(b);
-
-    const keyEl = document.createElement('span');
-    keyEl.className = 'binding-key';
-    keyEl.textContent = b.key.toUpperCase();
-    row.appendChild(keyEl);
-
-    const typeEl = document.createElement('span');
-    typeEl.className = 'binding-type';
-    typeEl.textContent = formatActionType(b.actionType);
-    row.appendChild(typeEl);
-
-    const valEl = document.createElement('span');
-    valEl.className = 'binding-value';
-    valEl.textContent = describeAction(b);
-    row.appendChild(valEl);
-
-    const actions = document.createElement('span');
-    actions.className = 'binding-actions';
-
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn-ghost btn-sm';
-    editBtn.textContent = 'Edit';
-    editBtn.onclick = (e) => { e.stopPropagation(); openEditBinding(b); };
-    actions.appendChild(editBtn);
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn-ghost btn-sm';
-    delBtn.textContent = 'Del';
-    delBtn.style.color = 'var(--danger)';
-    delBtn.onclick = (e) => {
-      e.stopPropagation();
-      store.deleteBinding(selectedSublayer, b.key);
-    };
-    actions.appendChild(delBtn);
-
-    row.appendChild(actions);
-    container.appendChild(row);
+function renderBindingEditor() {
+  // If a binding is selected and the form is not actively open, show it in the editor
+  if (selectedBinding !== null && editingBinding === null) {
+    const bindings = getCurrentBindings();
+    const binding = bindings.find(b => b.key === selectedBinding);
+    if (binding) {
+      openEditBinding(binding);
+    } else {
+      // Binding was deleted or doesn't exist anymore
+      selectedBinding = null;
+      closeBindingForm();
+    }
   }
 }
 
 function getCurrentBindings() {
-  if (selectedSublayer === null) return store.directBindings;
-  const sl = store.sublayers.find(s => s.key === selectedSublayer);
+  if (selectedSublayer === null) return store.directBindings(selectedTrigger);
+  const sl = store.sublayers(selectedTrigger).find(s => s.key === selectedSublayer);
   return sl ? sl.bindings : [];
 }
 
@@ -1479,8 +1571,8 @@ function getCurrentBindings() {
 
 function openAddBinding(prefilledKey) {
   editingBinding = { key: null, isNew: true };
-  const form = document.getElementById('binding-form');
-  form.hidden = false;
+  selectedBinding = null;
+  showBindingForm();
   document.getElementById('bf-key').value = prefilledKey || '';
   document.getElementById('bf-key').disabled = false;
   document.getElementById('bf-type').value = 'app';
@@ -1488,9 +1580,10 @@ function openAddBinding(prefilledKey) {
   document.getElementById('bf-value').placeholder = 'App name (e.g. Safari)';
   document.getElementById('bf-error').textContent = '';
   document.getElementById('modifier-row').hidden = true;
+  document.getElementById('btn-delete-binding').hidden = true;
+  document.getElementById('binding-panel-title').textContent = 'New Binding';
   clearModifierCheckboxes();
   requestAnimationFrame(() => {
-    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     if (!prefilledKey) document.getElementById('bf-key').focus();
     else document.getElementById('bf-value').focus();
   });
@@ -1498,12 +1591,14 @@ function openAddBinding(prefilledKey) {
 
 function openEditBinding(binding) {
   editingBinding = { key: binding.key, isNew: false };
-  const form = document.getElementById('binding-form');
-  form.hidden = false;
+  selectedBinding = binding.key;
+  showBindingForm();
   document.getElementById('bf-key').value = binding.key;
   document.getElementById('bf-key').disabled = true;
   document.getElementById('bf-type').value = binding.actionType;
   document.getElementById('bf-error').textContent = '';
+  document.getElementById('btn-delete-binding').hidden = false;
+  document.getElementById('binding-panel-title').textContent = 'Edit Binding — ' + binding.key.toUpperCase();
   updateValuePlaceholder(binding.actionType);
 
   if (binding.actionType === 'key') {
@@ -1516,15 +1611,25 @@ function openEditBinding(binding) {
     clearModifierCheckboxes();
   }
 
+  renderTree();
   requestAnimationFrame(() => {
-    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     document.getElementById('bf-value').focus();
   });
 }
 
+function showBindingForm() {
+  document.getElementById('binding-editor-placeholder').hidden = true;
+  document.getElementById('binding-form').hidden = false;
+}
+
 function closeBindingForm() {
   editingBinding = null;
+  selectedBinding = null;
   document.getElementById('binding-form').hidden = true;
+  document.getElementById('binding-editor-placeholder').hidden = false;
+  document.getElementById('btn-delete-binding').hidden = true;
+  document.getElementById('binding-panel-title').textContent = 'Binding Editor';
+  renderTree();
 }
 
 function saveBinding() {
@@ -1543,7 +1648,7 @@ function saveBinding() {
   }
 
   // Check if key conflicts with sublayer activator (in direct mode)
-  if (selectedSublayer === null && store.sublayers.some(s => s.key === key) && editingBinding.isNew) {
+  if (selectedSublayer === null && store.sublayers(selectedTrigger).some(s => s.key === key) && editingBinding.isNew) {
     errorEl.textContent = 'Key "' + key + '" is already used as a sublayer activator.';
     return;
   }
@@ -1553,20 +1658,26 @@ function saveBinding() {
 
   let ok;
   if (editingBinding.isNew) {
-    ok = store.addBinding(selectedSublayer, binding);
+    ok = store.addBinding(selectedTrigger, selectedSublayer, binding);
     if (!ok) {
       errorEl.textContent = 'Key "' + key.toUpperCase() + '" is already bound in this layer.';
       return;
     }
   } else {
-    ok = store.updateBinding(selectedSublayer, editingBinding.key, binding);
+    ok = store.updateBinding(selectedTrigger, selectedSublayer, editingBinding.key, binding);
     if (!ok) {
       errorEl.textContent = 'Key "' + key.toUpperCase() + '" is already bound in this layer.';
       return;
     }
   }
 
-  closeBindingForm();
+  // After save, select the binding and show it in editor
+  selectedBinding = key;
+  editingBinding = null;
+  document.getElementById('binding-form').hidden = true;
+  document.getElementById('binding-editor-placeholder').hidden = false;
+  document.getElementById('btn-delete-binding').hidden = true;
+  document.getElementById('binding-panel-title').textContent = 'Binding Editor';
 }
 
 function updateValuePlaceholder(actionType) {
@@ -1664,8 +1775,14 @@ function showPasteView() {
 function showEditorView() {
   document.getElementById('paste-view').hidden = true;
   document.getElementById('editor-view').hidden = false;
+  selectedTrigger = 'caps_lock';
   selectedSublayer = null;
+  selectedBinding = null;
   closeBindingForm();
+  // Initialize expanded state: expand both trigger keys
+  expandedNodes.clear();
+  expandedNodes.add('trigger:caps_lock');
+  expandedNodes.add('trigger:tab');
   render();
 }
 
@@ -1723,11 +1840,6 @@ function init() {
     showPasteView();
   });
 
-  // Trigger key select
-  document.getElementById('trigger-select').addEventListener('change', (e) => {
-    store.setTriggerKey(e.target.value);
-  });
-
   // Add sublayer UI
   document.getElementById('btn-show-add-sl').addEventListener('click', () => {
     document.getElementById('btn-show-add-sl').hidden = true;
@@ -1754,7 +1866,7 @@ function init() {
       return;
     }
 
-    const ok = store.addSublayer(key, label);
+    const ok = store.addSublayer(selectedTrigger, key, label);
     if (!ok) {
       errorEl.textContent = 'Key "' + key.toUpperCase() + '" is already used.';
       return;
@@ -1765,9 +1877,14 @@ function init() {
   });
 
   // Binding form events
-  document.getElementById('btn-add-binding').addEventListener('click', () => openAddBinding(''));
   document.getElementById('btn-save-binding').addEventListener('click', saveBinding);
   document.getElementById('btn-cancel-binding').addEventListener('click', closeBindingForm);
+  document.getElementById('btn-delete-binding').addEventListener('click', () => {
+    if (editingBinding && !editingBinding.isNew) {
+      store.deleteBinding(selectedTrigger, selectedSublayer, editingBinding.key);
+      closeBindingForm();
+    }
+  });
   document.getElementById('bf-type').addEventListener('change', (e) => {
     updateValuePlaceholder(e.target.value);
     clearModifierCheckboxes();

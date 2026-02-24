@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: Display hyper key trigger configuration
 The system SHALL display which physical key is configured as the hyper key trigger via the top-level nodes of the tree in the left panel. The active trigger key node SHALL be visually distinguished (bold, expanded) and the inactive trigger key node SHALL appear dimmed and collapsed.
 
@@ -20,9 +22,8 @@ The system SHALL allow the user to change the hyper key trigger by clicking the 
 - **WHEN** user clicks the "Caps Lock" top-level node while "Tab" is active
 - **THEN** the trigger key switches to `caps_lock`, the "Caps Lock" node becomes active and expanded, and "Tab" becomes inactive and collapsed
 
-### Requirement: Create hyper key from scratch
-The system SHALL allow creating a new hyper key configuration when no existing config is loaded.
+## REMOVED Requirements
 
-#### Scenario: Start with empty config
-- **WHEN** user clicks "New Configuration" without pasting any JSON
-- **THEN** the system creates a default hyper key activator (Caps Lock, tap = Escape) with no sublayers, and enters the editor
+### Requirement: Display hyper key trigger configuration
+**Reason**: The header dropdown display is replaced by tree-level trigger key nodes in the left panel.
+**Migration**: Trigger key display and tap action info are now shown within the tree's top-level nodes.

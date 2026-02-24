@@ -1,1 +1,1 @@
-# key-mappings
+# [HYPER] Key Editor for Karabiner-Elements (KEKE)
