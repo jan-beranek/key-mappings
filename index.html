@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karabiner Hyper Key Editor</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --text: #1a1a2e;
+  --text-secondary: #6b7280;
+  --border: #e2e5e9;
+  --primary: #4361ee;
+  --primary-hover: #3a56d4;
+  --primary-light: #eef1fd;
+  --danger: #e63946;
+  --danger-hover: #d62b39;
+  --success: #2a9d8f;
+  --accent: #f72585;
+  --accent-light: #fde8f3;
+  --key-bound: #4361ee;
+  --key-sublayer: #f72585;
+  --key-available: #f0f1f3;
+  --key-available-border: #d1d5db;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  transition: background 0.15s, transform 0.1s;
+}
+button:active { transform: scale(0.97); }
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--bg); }
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover { background: var(--danger-hover); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+}
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+
+.btn-sm { font-size: 13px; padding: 4px 10px; }
+
+.error-msg {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* ======================== */
+/* Paste View               */
+/* ======================== */
+
+#paste-view {
+  max-width: 720px;
+  margin: 80px auto;
+  padding: 0 24px;
+}
+
+#paste-view h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+#paste-view .subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+#json-input {
+  width: 100%;
+  height: 280px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  resize: vertical;
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+#paste-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  align-items: center;
+}
+
+#paste-error {
+  min-height: 22px;
+}
+
+/* ======================== */
+/* Editor View              */
+/* ======================== */
+
+#editor-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#editor-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+
+#editor-header h1 {
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#hyper-config {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+#hyper-config label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#trigger-select {
+  padding: 3px 8px;
+  font-size: 13px;
+}
+
+#tap-action {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+#header-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+#editor-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sublayer Panel */
+
+#sublayer-panel {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+#sublayer-panel-header {
+  padding: 12px 14px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.sublayer-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+  gap: 8px;
+  font-size: 14px;
+}
+.sublayer-item:hover { background: var(--bg); }
+.sublayer-item.selected {
+  background: var(--primary-light);
+  border-left-color: var(--primary);
+  font-weight: 500;
+}
+
+.sublayer-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'SF Mono', monospace;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.sublayer-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sublayer-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.sublayer-actions {
+  display: none;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.sublayer-item:hover .sublayer-actions { display: flex; }
+.sublayer-item:hover .sublayer-count { display: none; }
+
+.sublayer-actions button {
+  padding: 2px 4px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 3px;
+}
+.sublayer-actions button:hover { background: var(--border); color: var(--text); }
+.sublayer-actions .del-btn:hover { color: var(--danger); }
+
+#add-sublayer-area {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+#add-sublayer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#add-sublayer-form .row {
+  display: flex;
+  gap: 6px;
+}
+
+#add-sublayer-form input {
+  font-size: 13px;
+  padding: 5px 8px;
+}
+
+#sl-key-input {
+  width: 40px;
+  text-align: center;
+  text-transform: lowercase;
+  font-family: 'SF Mono', monospace;
+}
+
+#sl-label-input { flex: 1; }
+
+/* Rename input */
+.rename-input {
+  font-size: 13px;
+  padding: 2px 6px;
+  width: 100%;
+  border: 1px solid var(--primary);
+  border-radius: 3px;
+}
+
+/* Main Panel */
+
+#main-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Key Grid */
+
+#key-grid {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+#key-grid-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+}
+
+.key-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.key-cell {
+  width: 54px;
+  height: 54px;
+  border: 1px solid var(--key-available-border);
+  border-radius: var(--radius);
+  background: var(--key-available);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s;
+  padding: 2px;
+  position: relative;
+}
+.key-cell:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.key-letter {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'SF Mono', monospace;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.key-action {
+  font-size: 8px;
+  color: #fff;
+  line-height: 1.1;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 48px;
+  margin-top: 2px;
+}
+
+.key-cell.bound {
+  background: var(--key-bound);
+  border-color: var(--key-bound);
+  color: #fff;
+}
+.key-cell.bound .key-letter { color: #fff; }
+.key-cell.bound:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.key-cell.sublayer-activator {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.key-cell.sublayer-activator .key-letter { color: #fff; }
+.key-cell.sublayer-activator .key-action { color: rgba(255,255,255,0.85); }
+.key-cell.sublayer-activator:hover {
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+/* Binding Panel */
+
+#binding-panel {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+#binding-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+#binding-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#binding-list {
+  min-height: 40px;
+}
+
+.binding-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 10px;
+  border-bottom: 1px solid var(--bg);
+  font-size: 14px;
+}
+.binding-row:last-child { border-bottom: none; }
+.binding-row:hover { background: var(--bg); }
+.binding-row { cursor: pointer; }
+
+.binding-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'SF Mono', monospace;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.binding-type {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.binding-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.binding-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.binding-row:hover .binding-actions { opacity: 1; }
+
+.empty-state {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Binding Form */
+
+#binding-form {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+#binding-form .form-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+#binding-form label {
+  font-size: 13px;
+  font-weight: 500;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+#binding-form input, #binding-form select {
+  font-size: 13px;
+  padding: 5px 8px;
+}
+
+#bf-key {
+  width: 50px;
+  text-align: center;
+  text-transform: lowercase;
+  font-family: 'SF Mono', monospace;
+}
+
+#bf-type { width: 140px; }
+#bf-value { flex: 1; min-width: 120px; }
+
+#modifier-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+#modifier-row label {
+  width: auto;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+#modifier-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+}
+
+#binding-form .form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+#bf-error {
+  min-height: 18px;
+}
+
+/* Toast */
+
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #1a1a2e;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.25s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Confirm dialog */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.confirm-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  max-width: 360px;
+  width: 90%;
+}
+
+.confirm-box p {
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.confirm-box .actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ========== Paste View ========== -->
+  <div id="paste-view">
+    <h1>Karabiner Hyper Key Editor</h1>
+    <p class="subtitle">Paste your karabiner.json or rules array, edit visually, copy the result.</p>
+    <textarea id="json-input" placeholder='Paste your karabiner.json or complex_modifications rules array here...'></textarea>
+    <div id="paste-error" class="error-msg"></div>
+    <div id="paste-actions">
+      <button class="btn-primary" id="btn-load">Load Configuration</button>
+      <button class="btn-secondary" id="btn-new">New Configuration</button>
+    </div>
+  </div>
+
+  <!-- ========== Editor View ========== -->
+  <div id="editor-view" hidden>
+    <header id="editor-header">
+      <h1>Hyper Key Editor</h1>
+      <div id="hyper-config">
+        <label>Trigger:
+          <select id="trigger-select">
+            <option value="caps_lock">Caps Lock</option>
+            <option value="tab">Tab</option>
+          </select>
+        </label>
+        <span id="tap-action">Tap: Escape</span>
+      </div>
+      <div id="header-actions">
+        <button class="btn-primary btn-sm" id="btn-copy">Copy JSON</button>
+        <button class="btn-secondary btn-sm" id="btn-start-over">Start Over</button>
+      </div>
+    </header>
+
+    <div id="editor-body">
+      <aside id="sublayer-panel">
+        <div id="sublayer-panel-header">Layers</div>
+        <div id="sublayer-list"></div>
+        <div id="add-sublayer-area">
+          <button class="btn-secondary btn-sm" id="btn-show-add-sl" style="width:100%">+ Add Sublayer</button>
+          <div id="add-sublayer-form" hidden>
+            <div class="row">
+              <input id="sl-key-input" maxlength="1" placeholder="Key">
+              <input id="sl-label-input" placeholder="Label (e.g. Open Apps)">
+            </div>
+            <div id="add-sl-error" class="error-msg"></div>
+            <div class="row">
+              <button class="btn-primary btn-sm" id="btn-create-sl">Create</button>
+              <button class="btn-secondary btn-sm" id="btn-cancel-sl">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div id="main-panel">
+        <div id="key-grid">
+          <div id="key-grid-title">Key Bindings</div>
+          <div id="key-grid-rows"></div>
+        </div>
+
+        <div id="binding-panel">
+          <div id="binding-panel-header">
+            <span id="binding-panel-title">Bindings</span>
+            <button class="btn-primary btn-sm" id="btn-add-binding">+ Add Binding</button>
+          </div>
+          <div id="binding-list"></div>
+          <div id="binding-form" hidden>
+            <div class="form-row">
+              <label>Key</label>
+              <input id="bf-key" maxlength="1" placeholder="Key">
+              <label>Type</label>
+              <select id="bf-type">
+                <option value="app">Open App</option>
+                <option value="shell">Shell Command</option>
+                <option value="key">Key Combo</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Value</label>
+              <input id="bf-value" placeholder="App name, command, or key_code">
+            </div>
+            <div class="form-row" id="modifier-row" hidden>
+              <label>Modifiers</label>
+              <label><input type="checkbox" id="mod-cmd" value="left_command"> Cmd</label>
+              <label><input type="checkbox" id="mod-ctrl" value="left_control"> Ctrl</label>
+              <label><input type="checkbox" id="mod-opt" value="left_option"> Opt</label>
+              <label><input type="checkbox" id="mod-shift" value="left_shift"> Shift</label>
+            </div>
+            <div id="bf-error" class="error-msg"></div>
+            <div class="form-actions">
+              <button class="btn-primary btn-sm" id="btn-save-binding">Save</button>
+              <button class="btn-secondary btn-sm" id="btn-cancel-binding">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// Configuration Store
+// ============================================================
+
+class ConfigStore extends EventTarget {
+  constructor() {
+    super();
+    this.config = null;
+  }
+
+  load(config) {
+    this.config = config;
+    this._emit();
+  }
+
+  get hyperKey() { return this.config?.hyperKey; }
+  get sublayers() { return this.config?.sublayers || []; }
+  get directBindings() { return this.config?.directBindings || []; }
+  get passThroughRules() { return this.config?.passThroughRules || []; }
+  get ruleSlots() { return this.config?.ruleSlots || []; }
+
+  setTriggerKey(triggerKey) {
+    const tapAction = triggerKey === 'tab' ? 'tab' : 'escape';
+    this.config.hyperKey = { triggerKey, tapAction };
+    this._emit();
+  }
+
+  addSublayer(key, label) {
+    key = key.toLowerCase();
+    if (this.sublayers.some(s => s.key === key)) return false;
+    this.config.sublayers.push({ key, label, bindings: [] });
+    // Insert slot before first passthrough
+    const ptIdx = this.config.ruleSlots.findIndex(s => s.type === 'passthrough');
+    const slot = { type: 'sublayer', key };
+    if (ptIdx >= 0) this.config.ruleSlots.splice(ptIdx, 0, slot);
+    else this.config.ruleSlots.push(slot);
+    this._emit();
+    return true;
+  }
+
+  deleteSublayer(key) {
+    this.config.sublayers = this.config.sublayers.filter(s => s.key !== key);
+    this.config.ruleSlots = this.config.ruleSlots.filter(
+      s => !(s.type === 'sublayer' && s.key === key)
+    );
+    this._emit();
+  }
+
+  renameSublayer(key, label) {
+    const sl = this.config.sublayers.find(s => s.key === key);
+    if (sl) { sl.label = label; this._emit(); }
+  }
+
+  _getBindings(sublayerKey) {
+    if (sublayerKey === null) return this.config.directBindings;
+    const sl = this.config.sublayers.find(s => s.key === sublayerKey);
+    return sl ? sl.bindings : [];
+  }
+
+  addBinding(sublayerKey, binding) {
+    const bindings = this._getBindings(sublayerKey);
+    if (bindings.some(b => b.key === binding.key)) return false;
+    bindings.push(binding);
+    this._emit();
+    return true;
+  }
+
+  updateBinding(sublayerKey, oldKey, binding) {
+    const bindings = this._getBindings(sublayerKey);
+    const idx = bindings.findIndex(b => b.key === oldKey);
+    if (idx >= 0) {
+      if (binding.key !== oldKey && bindings.some(b => b.key === binding.key)) return false;
+      bindings[idx] = binding;
+      this._emit();
+      return true;
+    }
+    return false;
+  }
+
+  deleteBinding(sublayerKey, bindingKey) {
+    if (sublayerKey === null) {
+      this.config.directBindings = this.config.directBindings.filter(b => b.key !== bindingKey);
+    } else {
+      const sl = this.config.sublayers.find(s => s.key === sublayerKey);
+      if (sl) sl.bindings = sl.bindings.filter(b => b.key !== bindingKey);
+    }
+    this._emit();
+  }
+
+  _emit() {
+    this.dispatchEvent(new Event('change'));
+  }
+}
+
+// ============================================================
+// Default Config Factory
+// ============================================================
+
+function createDefaultConfig() {
+  return {
+    hyperKey: { triggerKey: 'caps_lock', tapAction: 'escape' },
+    sublayers: [],
+    directBindings: [],
+    passThroughRules: [],
+    ruleSlots: [{ type: 'hyper' }, { type: 'direct' }]
+  };
+}
+
+// ============================================================
+// JSON Parser
+// ============================================================
+
+function normalizeInput(text) {
+  const trimmed = text.trim();
+  let parsed;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch (e) {
+    throw new Error('Invalid JSON: ' + e.message);
+  }
+
+  // Full karabiner.json
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    if (parsed.profiles && Array.isArray(parsed.profiles)) {
+      const profile = parsed.profiles[0];
+      if (profile?.complex_modifications?.rules) {
+        return profile.complex_modifications.rules;
+      }
+    }
+    // Single rule object
+    if (parsed.manipulators) return [parsed];
+    throw new Error('Could not find rules in the JSON. Expected a rules array or a full karabiner.json.');
+  }
+
+  if (Array.isArray(parsed)) return parsed;
+
+  throw new Error('Expected a JSON array of rules or a karabiner.json object.');
+}
+
+function parseRules(rules) {
+  const config = {
+    hyperKey: null,
+    sublayers: [],
+    directBindings: [],
+    passThroughRules: [],
+    ruleSlots: []
+  };
+
+  // Map from variable name to sublayer info
+  const sublayerMap = new Map(); // varName -> { key, label, bindings }
+
+  for (const rule of rules) {
+    if (!rule.manipulators || !Array.isArray(rule.manipulators)) {
+      config.passThroughRules.push(rule);
+      config.ruleSlots.push({ type: 'passthrough', index: config.passThroughRules.length - 1 });
+      continue;
+    }
+
+    let ruleType = null;
+    let sublayerKey = null;
+    let sublayerVarName = null;
+    let sublayerLabel = '';
+
+    // First pass: identify rule type by scanning manipulators
+    for (const m of rule.manipulators) {
+      const setVars = getSetVariables(m);
+      for (const sv of setVars) {
+        if (sv.name === 'hyper' && sv.value === 1) {
+          ruleType = 'hyper';
+          break;
+        }
+        const slMatch = sv.name.match(/^hyper_sublayer_(.+)$/);
+        if (slMatch && sv.value === 1) {
+          ruleType = 'sublayer';
+          sublayerVarName = sv.name;
+          sublayerKey = m.from?.key_code || slMatch[1];
+          sublayerLabel = extractSublayerLabel(rule.description || m.description || '', sublayerKey);
+          break;
+        }
+      }
+      if (ruleType) break;
+    }
+
+    // Check for direct hyper bindings (no sublayer activator in the rule)
+    if (!ruleType) {
+      const hasHyperCondition = rule.manipulators.some(m => hasCondition(m, 'hyper', 1));
+      if (hasHyperCondition) ruleType = 'direct';
+    }
+
+    if (ruleType === 'hyper') {
+      const activator = rule.manipulators.find(m =>
+        getSetVariables(m).some(sv => sv.name === 'hyper' && sv.value === 1)
+      );
+      if (activator) {
+        const triggerKey = activator.from?.key_code || 'caps_lock';
+        let tapAction = 'escape';
+        if (activator.to_if_alone?.length) {
+          tapAction = activator.to_if_alone[0].key_code || 'escape';
+        }
+        config.hyperKey = { triggerKey, tapAction };
+      }
+      config.ruleSlots.push({ type: 'hyper' });
+
+    } else if (ruleType === 'sublayer') {
+      const bindings = [];
+      for (const m of rule.manipulators) {
+        // Skip the sublayer activator itself
+        if (getSetVariables(m).some(sv => sv.name === sublayerVarName && sv.value === 1)) continue;
+        // Check if this manipulator is conditioned on the sublayer
+        if (hasCondition(m, sublayerVarName, 1)) {
+          const binding = parseBinding(m);
+          if (binding) bindings.push(binding);
+        }
+      }
+      const sublayer = { key: sublayerKey, label: sublayerLabel, bindings };
+      config.sublayers.push(sublayer);
+      sublayerMap.set(sublayerVarName, sublayer);
+      config.ruleSlots.push({ type: 'sublayer', key: sublayerKey });
+
+    } else if (ruleType === 'direct') {
+      for (const m of rule.manipulators) {
+        if (hasCondition(m, 'hyper', 1)) {
+          const binding = parseBinding(m);
+          if (binding) config.directBindings.push(binding);
+        }
+      }
+      config.ruleSlots.push({ type: 'direct' });
+
+    } else {
+      config.passThroughRules.push(rule);
+      config.ruleSlots.push({ type: 'passthrough', index: config.passThroughRules.length - 1 });
+    }
+  }
+
+  // Ensure we have at least a default hyper key
+  if (!config.hyperKey) {
+    config.hyperKey = { triggerKey: 'caps_lock', tapAction: 'escape' };
+    // Prepend hyper slot if not present
+    if (!config.ruleSlots.some(s => s.type === 'hyper')) {
+      config.ruleSlots.unshift({ type: 'hyper' });
+    }
+  }
+
+  // Ensure direct slot exists
+  if (!config.ruleSlots.some(s => s.type === 'direct')) {
+    const lastSl = config.ruleSlots.findLastIndex(s => s.type === 'sublayer');
+    const insertAt = lastSl >= 0 ? lastSl + 1 : config.ruleSlots.findIndex(s => s.type === 'hyper') + 1;
+    config.ruleSlots.splice(insertAt, 0, { type: 'direct' });
+  }
+
+  return config;
+}
+
+function getSetVariables(manipulator) {
+  const results = [];
+  for (const target of ['to', 'to_if_alone', 'to_if_held_down']) {
+    const arr = manipulator[target];
+    if (!Array.isArray(arr)) continue;
+    for (const item of arr) {
+      if (item.set_variable) results.push(item.set_variable);
+    }
+  }
+  return results;
+}
+
+function hasCondition(manipulator, varName, value) {
+  if (!Array.isArray(manipulator.conditions)) return false;
+  return manipulator.conditions.some(
+    c => c.type === 'variable_if' && c.name === varName && c.value === value
+  );
+}
+
+function extractSublayerLabel(description, key) {
+  // Try to extract from patterns like "Hyper + O sublayer -> Open apps" or "Open apps"
+  const arrowMatch = description.match(/->\s*(.+)$/i);
+  if (arrowMatch) return arrowMatch[1].trim();
+  const colonMatch = description.match(/:\s*(.+)$/i);
+  if (colonMatch) return colonMatch[1].trim();
+  if (description && !description.toLowerCase().includes('sublayer') && !description.toLowerCase().includes('hyper')) {
+    return description.trim();
+  }
+  return key.toUpperCase();
+}
+
+function parseBinding(manipulator) {
+  const key = manipulator.from?.key_code;
+  if (!key) return null;
+
+  const toArr = manipulator.to;
+  if (!Array.isArray(toArr) || toArr.length === 0) return null;
+
+  const to = toArr[0];
+
+  if (to.shell_command) {
+    const appMatch = to.shell_command.match(/^open\s+-a\s+'?(.+?)(?:\.app)?'?\s*$/);
+    if (appMatch) {
+      return { key, actionType: 'app', value: appMatch[1], modifiers: [] };
+    }
+    return { key, actionType: 'shell', value: to.shell_command, modifiers: [] };
+  }
+
+  if (to.key_code) {
+    return { key, actionType: 'key', value: to.key_code, modifiers: to.modifiers || [] };
+  }
+
+  if (to.consumer_key_code) {
+    return { key, actionType: 'key', value: to.consumer_key_code, modifiers: [] };
+  }
+
+  // Fallback: store raw
+  return { key, actionType: 'shell', value: JSON.stringify(to), modifiers: [] };
+}
+
+// ============================================================
+// JSON Serializer
+// ============================================================
+
+function serializeConfig(config) {
+  const rules = [];
+
+  for (const slot of config.ruleSlots) {
+    switch (slot.type) {
+      case 'hyper':
+        rules.push(serializeHyperKey(config.hyperKey));
+        break;
+      case 'sublayer': {
+        const sl = config.sublayers.find(s => s.key === slot.key);
+        if (sl) rules.push(serializeSublayer(sl, config.sublayers));
+        break;
+      }
+      case 'direct':
+        if (config.directBindings.length > 0) {
+          rules.push(serializeDirectBindings(config.directBindings));
+        }
+        break;
+      case 'passthrough':
+        if (config.passThroughRules[slot.index]) {
+          rules.push(config.passThroughRules[slot.index]);
+        }
+        break;
+    }
+  }
+
+  return rules;
+}
+
+function serializeHyperKey(hyperKey) {
+  return {
+    description: `Hyper Key (${hyperKey.triggerKey === 'caps_lock' ? 'Caps Lock' : 'Tab'})`,
+    manipulators: [{
+      type: 'basic',
+      from: {
+        key_code: hyperKey.triggerKey,
+        modifiers: { optional: ['any'] }
+      },
+      to: [{ set_variable: { name: 'hyper', value: 1 } }],
+      to_if_alone: [{ key_code: hyperKey.tapAction }],
+      to_after_key_up: [{ set_variable: { name: 'hyper', value: 0 } }]
+    }]
+  };
+}
+
+function serializeSublayer(sublayer, allSublayers) {
+  const varName = 'hyper_sublayer_' + sublayer.key;
+
+  // Build mutual exclusion conditions
+  const conditions = [{ type: 'variable_if', name: 'hyper', value: 1 }];
+  for (const other of allSublayers) {
+    if (other.key !== sublayer.key) {
+      conditions.push({ type: 'variable_if', name: 'hyper_sublayer_' + other.key, value: 0 });
+    }
+  }
+
+  const manipulators = [];
+
+  // Sublayer activator
+  manipulators.push({
+    type: 'basic',
+    description: 'Activate sublayer ' + sublayer.key.toUpperCase(),
+    conditions,
+    from: {
+      key_code: sublayer.key,
+      modifiers: { optional: ['any'] }
+    },
+    to: [{ set_variable: { name: varName, value: 1 } }],
+    to_after_key_up: [{ set_variable: { name: varName, value: 0 } }]
+  });
+
+  // Bindings
+  for (const binding of sublayer.bindings) {
+    manipulators.push({
+      type: 'basic',
+      description: sublayer.key.toUpperCase() + ' + ' + binding.key.toUpperCase() + ' -> ' + describeAction(binding),
+      conditions: [{ type: 'variable_if', name: varName, value: 1 }],
+      from: {
+        key_code: binding.key,
+        modifiers: { optional: ['any'] }
+      },
+      to: [serializeAction(binding)]
+    });
+  }
+
+  return {
+    description: 'Hyper + ' + sublayer.key.toUpperCase() + ' sublayer -> ' + sublayer.label,
+    manipulators
+  };
+}
+
+function serializeDirectBindings(bindings) {
+  const manipulators = bindings.map(binding => ({
+    type: 'basic',
+    description: 'Hyper + ' + binding.key.toUpperCase() + ' -> ' + describeAction(binding),
+    conditions: [{ type: 'variable_if', name: 'hyper', value: 1 }],
+    from: {
+      key_code: binding.key,
+      modifiers: { optional: ['any'] }
+    },
+    to: [serializeAction(binding)]
+  }));
+
+  return {
+    description: 'Hyper direct bindings',
+    manipulators
+  };
+}
+
+function serializeAction(binding) {
+  switch (binding.actionType) {
+    case 'app': {
+      const name = binding.value.endsWith('.app') ? binding.value : binding.value + '.app';
+      return { shell_command: "open -a '" + name + "'" };
+    }
+    case 'shell':
+      return { shell_command: binding.value };
+    case 'key': {
+      const result = { key_code: binding.value };
+      if (binding.modifiers?.length) result.modifiers = [...binding.modifiers];
+      return result;
+    }
+    default:
+      return { shell_command: binding.value };
+  }
+}
+
+function describeAction(binding) {
+  switch (binding.actionType) {
+    case 'app': return binding.value;
+    case 'shell': return binding.value;
+    case 'key': {
+      const mods = (binding.modifiers || []).map(formatModifier).filter(Boolean);
+      const parts = [...mods, binding.value];
+      return parts.join('+');
+    }
+    default: return binding.value;
+  }
+}
+
+function formatModifier(mod) {
+  const map = {
+    left_command: 'Cmd', right_command: 'Cmd', command: 'Cmd',
+    left_control: 'Ctrl', right_control: 'Ctrl', control: 'Ctrl',
+    left_option: 'Opt', right_option: 'Opt', option: 'Opt',
+    left_shift: 'Shift', right_shift: 'Shift', shift: 'Shift'
+  };
+  return map[mod] || mod;
+}
+
+function formatActionType(type) {
+  return { app: 'Open App', shell: 'Shell Cmd', key: 'Key Combo' }[type] || type;
+}
+
+// ============================================================
+// UI State
+// ============================================================
+
+const store = new ConfigStore();
+let selectedSublayer = null; // null = direct, string = sublayer key
+let editingBinding = null;   // null | { key, isNew }
+let renamingSublayer = null;  // null | sublayer key
+
+// ============================================================
+// Key Grid Layout
+// ============================================================
+
+const KEY_ROWS = [
+  ['1','2','3','4','5','6','7','8','9','0'],
+  ['q','w','e','r','t','y','u','i','o','p'],
+  ['a','s','d','f','g','h','j','k','l'],
+  ['z','x','c','v','b','n','m']
+];
+
+// ============================================================
+// UI Rendering
+// ============================================================
+
+function render() {
+  renderSublayerList();
+  renderKeyGrid();
+  renderBindingList();
+  renderHyperConfig();
+}
+
+function renderHyperConfig() {
+  const hk = store.hyperKey;
+  if (!hk) return;
+  document.getElementById('trigger-select').value = hk.triggerKey;
+  document.getElementById('tap-action').textContent =
+    'Tap: ' + (hk.tapAction === 'escape' ? 'Escape' : hk.tapAction === 'tab' ? 'Tab' : hk.tapAction);
+}
+
+function renderSublayerList() {
+  const container = document.getElementById('sublayer-list');
+  container.innerHTML = '';
+
+  // Direct pseudo-sublayer
+  const directItem = createSublayerItem(null, 'Direct', store.directBindings.length, null);
+  if (selectedSublayer === null) directItem.classList.add('selected');
+  container.appendChild(directItem);
+
+  // Sublayers
+  for (const sl of store.sublayers) {
+    const item = createSublayerItem(sl.key, sl.label, sl.bindings.length, sl.key);
+    if (selectedSublayer === sl.key) item.classList.add('selected');
+    container.appendChild(item);
+  }
+}
+
+function createSublayerItem(key, label, count, sublayerKey) {
+  const div = document.createElement('div');
+  div.className = 'sublayer-item';
+  div.onclick = () => { selectedSublayer = sublayerKey; closeBindingForm(); render(); };
+
+  if (key !== null) {
+    const keyEl = document.createElement('span');
+    keyEl.className = 'sublayer-key';
+    keyEl.textContent = key;
+    div.appendChild(keyEl);
+  } else {
+    const icon = document.createElement('span');
+    icon.className = 'sublayer-key';
+    icon.textContent = '*';
+    icon.style.fontSize = '16px';
+    div.appendChild(icon);
+  }
+
+  if (renamingSublayer === sublayerKey && sublayerKey !== null) {
+    const input = document.createElement('input');
+    input.className = 'rename-input';
+    input.value = label;
+    input.onclick = e => e.stopPropagation();
+    input.onkeydown = e => {
+      if (e.key === 'Enter') {
+        store.renameSublayer(sublayerKey, input.value);
+        renamingSublayer = null;
+      } else if (e.key === 'Escape') {
+        renamingSublayer = null;
+        render();
+      }
+    };
+    input.onblur = () => {
+      store.renameSublayer(sublayerKey, input.value);
+      renamingSublayer = null;
+    };
+    div.appendChild(input);
+    requestAnimationFrame(() => { input.focus(); input.select(); });
+  } else {
+    const labelEl = document.createElement('span');
+    labelEl.className = 'sublayer-label';
+    labelEl.textContent = label;
+    div.appendChild(labelEl);
+  }
+
+  const countEl = document.createElement('span');
+  countEl.className = 'sublayer-count';
+  countEl.textContent = count;
+  div.appendChild(countEl);
+
+  if (sublayerKey !== null) {
+    const actions = document.createElement('span');
+    actions.className = 'sublayer-actions';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.textContent = 'Rename';
+    renameBtn.onclick = e => { e.stopPropagation(); renamingSublayer = sublayerKey; render(); };
+    actions.appendChild(renameBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = 'Del';
+    delBtn.onclick = e => {
+      e.stopPropagation();
+      showConfirm('Delete sublayer "' + label + '" and all its bindings?', () => {
+        if (selectedSublayer === sublayerKey) selectedSublayer = null;
+        store.deleteSublayer(sublayerKey);
+      });
+    };
+    actions.appendChild(delBtn);
+
+    div.appendChild(actions);
+  }
+
+  return div;
+}
+
+function renderKeyGrid() {
+  const container = document.getElementById('key-grid-rows');
+  container.innerHTML = '';
+
+  const bindings = getCurrentBindings();
+  const bindingMap = new Map(bindings.map(b => [b.key, b]));
+  const sublayerKeys = new Set(store.sublayers.map(s => s.key));
+  const isDirect = selectedSublayer === null;
+
+  for (const row of KEY_ROWS) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'key-row';
+    for (const k of row) {
+      const cell = document.createElement('button');
+      cell.className = 'key-cell';
+      cell.dataset.key = k;
+
+      const letterSpan = document.createElement('span');
+      letterSpan.className = 'key-letter';
+      letterSpan.textContent = k.toUpperCase();
+      cell.appendChild(letterSpan);
+
+      const binding = bindingMap.get(k);
+      const isSublayerActivator = isDirect && sublayerKeys.has(k);
+
+      if (binding) {
+        cell.classList.add('bound');
+        const actionSpan = document.createElement('span');
+        actionSpan.className = 'key-action';
+        actionSpan.textContent = describeAction(binding);
+        cell.appendChild(actionSpan);
+        cell.onclick = () => openEditBinding(binding);
+      } else if (isSublayerActivator) {
+        cell.classList.add('sublayer-activator');
+        const sl = store.sublayers.find(s => s.key === k);
+        const actionSpan = document.createElement('span');
+        actionSpan.className = 'key-action';
+        actionSpan.textContent = sl?.label || '';
+        cell.appendChild(actionSpan);
+        cell.onclick = () => { selectedSublayer = k; closeBindingForm(); render(); };
+      } else {
+        cell.onclick = () => openAddBinding(k);
+      }
+
+      rowDiv.appendChild(cell);
+    }
+    container.appendChild(rowDiv);
+  }
+
+  // Update grid title
+  const title = document.getElementById('key-grid-title');
+  if (isDirect) {
+    title.textContent = 'Hyper + Key (Direct Bindings)';
+  } else {
+    const sl = store.sublayers.find(s => s.key === selectedSublayer);
+    title.textContent = sl ? 'Hyper + ' + sl.key.toUpperCase() + ' + Key (' + sl.label + ')' : 'Key Bindings';
+  }
+}
+
+function renderBindingList() {
+  const container = document.getElementById('binding-list');
+  container.innerHTML = '';
+
+  const bindings = getCurrentBindings();
+  const title = document.getElementById('binding-panel-title');
+
+  if (selectedSublayer === null) {
+    title.textContent = 'Direct Hyper Bindings';
+  } else {
+    const sl = store.sublayers.find(s => s.key === selectedSublayer);
+    title.textContent = sl ? sl.label + ' Bindings' : 'Bindings';
+  }
+
+  if (bindings.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'No bindings yet. Click a key or use "+ Add Binding".';
+    container.appendChild(empty);
+    return;
+  }
+
+  for (const b of bindings) {
+    const row = document.createElement('div');
+    row.className = 'binding-row';
+    row.onclick = () => openEditBinding(b);
+
+    const keyEl = document.createElement('span');
+    keyEl.className = 'binding-key';
+    keyEl.textContent = b.key.toUpperCase();
+    row.appendChild(keyEl);
+
+    const typeEl = document.createElement('span');
+    typeEl.className = 'binding-type';
+    typeEl.textContent = formatActionType(b.actionType);
+    row.appendChild(typeEl);
+
+    const valEl = document.createElement('span');
+    valEl.className = 'binding-value';
+    valEl.textContent = describeAction(b);
+    row.appendChild(valEl);
+
+    const actions = document.createElement('span');
+    actions.className = 'binding-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-ghost btn-sm';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = (e) => { e.stopPropagation(); openEditBinding(b); };
+    actions.appendChild(editBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-ghost btn-sm';
+    delBtn.textContent = 'Del';
+    delBtn.style.color = 'var(--danger)';
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      store.deleteBinding(selectedSublayer, b.key);
+    };
+    actions.appendChild(delBtn);
+
+    row.appendChild(actions);
+    container.appendChild(row);
+  }
+}
+
+function getCurrentBindings() {
+  if (selectedSublayer === null) return store.directBindings;
+  const sl = store.sublayers.find(s => s.key === selectedSublayer);
+  return sl ? sl.bindings : [];
+}
+
+// ============================================================
+// Binding Form
+// ============================================================
+
+function openAddBinding(prefilledKey) {
+  editingBinding = { key: null, isNew: true };
+  const form = document.getElementById('binding-form');
+  form.hidden = false;
+  document.getElementById('bf-key').value = prefilledKey || '';
+  document.getElementById('bf-key').disabled = false;
+  document.getElementById('bf-type').value = 'app';
+  document.getElementById('bf-value').value = '';
+  document.getElementById('bf-value').placeholder = 'App name (e.g. Safari)';
+  document.getElementById('bf-error').textContent = '';
+  document.getElementById('modifier-row').hidden = true;
+  clearModifierCheckboxes();
+  requestAnimationFrame(() => {
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (!prefilledKey) document.getElementById('bf-key').focus();
+    else document.getElementById('bf-value').focus();
+  });
+}
+
+function openEditBinding(binding) {
+  editingBinding = { key: binding.key, isNew: false };
+  const form = document.getElementById('binding-form');
+  form.hidden = false;
+  document.getElementById('bf-key').value = binding.key;
+  document.getElementById('bf-key').disabled = true;
+  document.getElementById('bf-type').value = binding.actionType;
+  document.getElementById('bf-error').textContent = '';
+  updateValuePlaceholder(binding.actionType);
+
+  if (binding.actionType === 'key') {
+    document.getElementById('bf-value').value = binding.value;
+    document.getElementById('modifier-row').hidden = false;
+    setModifierCheckboxes(binding.modifiers || []);
+  } else {
+    document.getElementById('bf-value').value = binding.value;
+    document.getElementById('modifier-row').hidden = true;
+    clearModifierCheckboxes();
+  }
+
+  requestAnimationFrame(() => {
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.getElementById('bf-value').focus();
+  });
+}
+
+function closeBindingForm() {
+  editingBinding = null;
+  document.getElementById('binding-form').hidden = true;
+}
+
+function saveBinding() {
+  const key = document.getElementById('bf-key').value.toLowerCase().trim();
+  const actionType = document.getElementById('bf-type').value;
+  const value = document.getElementById('bf-value').value.trim();
+  const errorEl = document.getElementById('bf-error');
+
+  if (!key || key.length !== 1) {
+    errorEl.textContent = 'Key must be a single character.';
+    return;
+  }
+  if (!value) {
+    errorEl.textContent = 'Value is required.';
+    return;
+  }
+
+  // Check if key conflicts with sublayer activator (in direct mode)
+  if (selectedSublayer === null && store.sublayers.some(s => s.key === key) && editingBinding.isNew) {
+    errorEl.textContent = 'Key "' + key + '" is already used as a sublayer activator.';
+    return;
+  }
+
+  const modifiers = actionType === 'key' ? getModifierCheckboxes() : [];
+  const binding = { key, actionType, value, modifiers };
+
+  let ok;
+  if (editingBinding.isNew) {
+    ok = store.addBinding(selectedSublayer, binding);
+    if (!ok) {
+      errorEl.textContent = 'Key "' + key.toUpperCase() + '" is already bound in this layer.';
+      return;
+    }
+  } else {
+    ok = store.updateBinding(selectedSublayer, editingBinding.key, binding);
+    if (!ok) {
+      errorEl.textContent = 'Key "' + key.toUpperCase() + '" is already bound in this layer.';
+      return;
+    }
+  }
+
+  closeBindingForm();
+}
+
+function updateValuePlaceholder(actionType) {
+  const input = document.getElementById('bf-value');
+  const modRow = document.getElementById('modifier-row');
+  switch (actionType) {
+    case 'app':
+      input.placeholder = 'App name (e.g. Safari)';
+      modRow.hidden = true;
+      break;
+    case 'shell':
+      input.placeholder = 'Shell command (e.g. bash ~/script.sh)';
+      modRow.hidden = true;
+      break;
+    case 'key':
+      input.placeholder = 'Key code (e.g. left_arrow, return_or_enter)';
+      modRow.hidden = false;
+      break;
+  }
+}
+
+function clearModifierCheckboxes() {
+  for (const id of ['mod-cmd', 'mod-ctrl', 'mod-opt', 'mod-shift']) {
+    document.getElementById(id).checked = false;
+  }
+}
+
+function setModifierCheckboxes(modifiers) {
+  const map = {
+    'mod-cmd': ['left_command', 'right_command', 'command'],
+    'mod-ctrl': ['left_control', 'right_control', 'control'],
+    'mod-opt': ['left_option', 'right_option', 'option'],
+    'mod-shift': ['left_shift', 'right_shift', 'shift']
+  };
+  for (const [id, values] of Object.entries(map)) {
+    document.getElementById(id).checked = modifiers.some(m => values.includes(m));
+  }
+}
+
+function getModifierCheckboxes() {
+  const mods = [];
+  if (document.getElementById('mod-cmd').checked) mods.push('left_command');
+  if (document.getElementById('mod-ctrl').checked) mods.push('left_control');
+  if (document.getElementById('mod-opt').checked) mods.push('left_option');
+  if (document.getElementById('mod-shift').checked) mods.push('left_shift');
+  return mods;
+}
+
+// ============================================================
+// Toast & Confirm
+// ============================================================
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function showConfirm(message, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  const box = document.createElement('div');
+  box.className = 'confirm-box';
+  const p = document.createElement('p');
+  p.textContent = message;
+  box.appendChild(p);
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn-secondary btn-sm';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => overlay.remove();
+  actions.appendChild(cancelBtn);
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn-danger btn-sm';
+  confirmBtn.textContent = 'Delete';
+  confirmBtn.onclick = () => { overlay.remove(); onConfirm(); };
+  actions.appendChild(confirmBtn);
+  box.appendChild(actions);
+  overlay.appendChild(box);
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+// ============================================================
+// View Switching
+// ============================================================
+
+function showPasteView() {
+  document.getElementById('paste-view').hidden = false;
+  document.getElementById('editor-view').hidden = true;
+}
+
+function showEditorView() {
+  document.getElementById('paste-view').hidden = true;
+  document.getElementById('editor-view').hidden = false;
+  selectedSublayer = null;
+  closeBindingForm();
+  render();
+}
+
+// ============================================================
+// Event Wiring
+// ============================================================
+
+function init() {
+  // Store change listener
+  store.addEventListener('change', render);
+
+  // Load button
+  document.getElementById('btn-load').addEventListener('click', () => {
+    const text = document.getElementById('json-input').value;
+    const errorEl = document.getElementById('paste-error');
+    try {
+      const rules = normalizeInput(text);
+      const config = parseRules(rules);
+      store.load(config);
+      errorEl.textContent = '';
+      showEditorView();
+    } catch (e) {
+      errorEl.textContent = e.message;
+    }
+  });
+
+  // New config button
+  document.getElementById('btn-new').addEventListener('click', () => {
+    store.load(createDefaultConfig());
+    showEditorView();
+  });
+
+  // Copy JSON button
+  document.getElementById('btn-copy').addEventListener('click', () => {
+    const rules = serializeConfig(store.config);
+    const json = JSON.stringify(rules, null, 4);
+    navigator.clipboard.writeText(json).then(() => {
+      showToast('JSON copied to clipboard!');
+    }).catch(() => {
+      // Fallback for file:// protocol where clipboard API may not work
+      const ta = document.createElement('textarea');
+      ta.value = json;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('JSON copied to clipboard!');
+    });
+  });
+
+  // Start over button
+  document.getElementById('btn-start-over').addEventListener('click', () => {
+    showPasteView();
+  });
+
+  // Trigger key select
+  document.getElementById('trigger-select').addEventListener('change', (e) => {
+    store.setTriggerKey(e.target.value);
+  });
+
+  // Add sublayer UI
+  document.getElementById('btn-show-add-sl').addEventListener('click', () => {
+    document.getElementById('btn-show-add-sl').hidden = true;
+    document.getElementById('add-sublayer-form').hidden = false;
+    document.getElementById('sl-key-input').value = '';
+    document.getElementById('sl-label-input').value = '';
+    document.getElementById('add-sl-error').textContent = '';
+    document.getElementById('sl-key-input').focus();
+  });
+
+  document.getElementById('btn-cancel-sl').addEventListener('click', closeAddSublayerForm);
+
+  document.getElementById('btn-create-sl').addEventListener('click', () => {
+    const key = document.getElementById('sl-key-input').value.toLowerCase().trim();
+    const label = document.getElementById('sl-label-input').value.trim();
+    const errorEl = document.getElementById('add-sl-error');
+
+    if (!key || key.length !== 1) {
+      errorEl.textContent = 'Key must be a single character.';
+      return;
+    }
+    if (!label) {
+      errorEl.textContent = 'Label is required.';
+      return;
+    }
+
+    const ok = store.addSublayer(key, label);
+    if (!ok) {
+      errorEl.textContent = 'Key "' + key.toUpperCase() + '" is already used.';
+      return;
+    }
+
+    selectedSublayer = key;
+    closeAddSublayerForm();
+  });
+
+  // Binding form events
+  document.getElementById('btn-add-binding').addEventListener('click', () => openAddBinding(''));
+  document.getElementById('btn-save-binding').addEventListener('click', saveBinding);
+  document.getElementById('btn-cancel-binding').addEventListener('click', closeBindingForm);
+  document.getElementById('bf-type').addEventListener('change', (e) => {
+    updateValuePlaceholder(e.target.value);
+    clearModifierCheckboxes();
+  });
+
+  // Enter key in binding form
+  document.getElementById('bf-value').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveBinding();
+  });
+  document.getElementById('bf-key').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('bf-value').focus();
+  });
+
+  // Enter key in add sublayer form
+  document.getElementById('sl-label-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-create-sl').click();
+  });
+  document.getElementById('sl-key-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('sl-label-input').focus();
+  });
+}
+
+function closeAddSublayerForm() {
+  document.getElementById('btn-show-add-sl').hidden = false;
+  document.getElementById('add-sublayer-form').hidden = true;
+}
+
+// Start
+init();
+</script>
+</body>
+</html>
