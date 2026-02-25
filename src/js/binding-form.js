@@ -2,9 +2,63 @@ import { store, state } from './state.js';
 import { renderTree, render } from './renderer.js';
 import { showConfirm } from './dialogs.js';
 
+function setBindingTitle(key, isLayer) {
+  const container = document.getElementById('binding-panel-title');
+  container.innerHTML = '';
+
+  const trigger = state.selectedTrigger === 'caps_lock' ? 'CAPS' : 'TAB';
+  const isSublayerContext = state.selectedSublayer !== null || isLayer;
+
+  const triggerBadge = document.createElement('span');
+  triggerBadge.className = 'binding-title-key ' + (isSublayerContext ? 'binding-title-key--sublayer' : 'binding-title-key--binding');
+  triggerBadge.textContent = trigger;
+  container.appendChild(triggerBadge);
+
+  if (state.selectedSublayer !== null) {
+    const plus1 = document.createElement('span');
+    plus1.className = 'binding-title-plus';
+    plus1.textContent = '+';
+    container.appendChild(plus1);
+
+    const slBadge = document.createElement('span');
+    slBadge.className = 'binding-title-key binding-title-key--sublayer';
+    slBadge.textContent = state.selectedSublayer.toUpperCase();
+    container.appendChild(slBadge);
+  }
+
+  if (key) {
+    const plus2 = document.createElement('span');
+    plus2.className = 'binding-title-plus';
+    plus2.textContent = '+';
+    container.appendChild(plus2);
+
+    const keyBadge = document.createElement('span');
+    const keyStyle = isLayer ? 'binding-title-key--sublayer' : 'binding-title-key--binding';
+    keyBadge.className = 'binding-title-key ' + keyStyle;
+    keyBadge.textContent = key.toUpperCase();
+    container.appendChild(keyBadge);
+  }
+}
+
+function resetBindingTitle() {
+  const container = document.getElementById('binding-panel-title');
+  container.textContent = 'Binding Editor';
+}
+
+function getSelectedType() {
+  const active = document.querySelector('#bf-type-tabs .type-tab.active');
+  return active ? active.dataset.type : 'app';
+}
+
+function setSelectedType(type) {
+  for (const tab of document.querySelectorAll('#bf-type-tabs .type-tab')) {
+    tab.classList.toggle('active', tab.dataset.type === type);
+  }
+}
+
 function updateLayerOptionVisibility() {
-  const layerOption = document.querySelector('#bf-type option[value="layer"]');
-  if (layerOption) layerOption.hidden = state.selectedSublayer !== null;
+  const layerTab = document.querySelector('#bf-type-tabs .type-tab[data-type="layer"]');
+  if (layerTab) layerTab.hidden = state.selectedSublayer !== null;
 }
 
 export function openAddBinding(prefilledKey) {
@@ -12,19 +66,17 @@ export function openAddBinding(prefilledKey) {
   state.selectedBinding = null;
   showBindingForm();
   document.getElementById('bf-key').value = prefilledKey || '';
-  document.getElementById('bf-key').disabled = false;
-  document.getElementById('bf-type').value = 'app';
+  setSelectedType('app');
   document.getElementById('bf-value').value = '';
   document.getElementById('bf-value').placeholder = 'App name (e.g. Safari)';
   document.getElementById('bf-error').textContent = '';
   document.getElementById('modifier-row').hidden = true;
   document.getElementById('btn-delete-binding').hidden = true;
-  document.getElementById('binding-panel-title').textContent = 'New Binding';
+  setBindingTitle(prefilledKey);
   updateLayerOptionVisibility();
   clearModifierCheckboxes();
   requestAnimationFrame(() => {
-    if (!prefilledKey) document.getElementById('bf-key').focus();
-    else document.getElementById('bf-value').focus();
+    document.getElementById('bf-value').focus();
   });
 }
 
@@ -34,11 +86,10 @@ export function openEditSublayer(sublayer) {
   state.selectedSublayer = null;
   showBindingForm();
   document.getElementById('bf-key').value = sublayer.key;
-  document.getElementById('bf-key').disabled = true;
-  document.getElementById('bf-type').value = 'layer';
+  setSelectedType('layer');
   document.getElementById('bf-error').textContent = '';
   document.getElementById('btn-delete-binding').hidden = false;
-  document.getElementById('binding-panel-title').textContent = 'Edit Layer — ' + sublayer.key.toUpperCase();
+  setBindingTitle(sublayer.key, true);
   updateLayerOptionVisibility();
   updateValuePlaceholder('layer');
   document.getElementById('bf-value').value = sublayer.label;
@@ -56,11 +107,10 @@ export function openEditBinding(binding) {
   state.selectedBinding = binding.key;
   showBindingForm();
   document.getElementById('bf-key').value = binding.key;
-  document.getElementById('bf-key').disabled = true;
-  document.getElementById('bf-type').value = binding.actionType;
+  setSelectedType(binding.actionType);
   document.getElementById('bf-error').textContent = '';
   document.getElementById('btn-delete-binding').hidden = false;
-  document.getElementById('binding-panel-title').textContent = 'Edit Binding — ' + binding.key.toUpperCase();
+  setBindingTitle(binding.key);
   updateLayerOptionVisibility();
   updateValuePlaceholder(binding.actionType);
 
@@ -91,13 +141,13 @@ export function closeBindingForm() {
   document.getElementById('binding-form').hidden = true;
   document.getElementById('binding-editor-placeholder').hidden = false;
   document.getElementById('btn-delete-binding').hidden = true;
-  document.getElementById('binding-panel-title').textContent = 'Binding Editor';
+  resetBindingTitle();
   renderTree();
 }
 
 export function saveBinding() {
   const key = document.getElementById('bf-key').value.toLowerCase().trim();
-  const actionType = document.getElementById('bf-type').value;
+  const actionType = getSelectedType();
   const value = document.getElementById('bf-value').value.trim();
   const errorEl = document.getElementById('bf-error');
 
@@ -139,7 +189,7 @@ export function saveBinding() {
     document.getElementById('binding-form').hidden = true;
     document.getElementById('binding-editor-placeholder').hidden = false;
     document.getElementById('btn-delete-binding').hidden = true;
-    document.getElementById('binding-panel-title').textContent = 'Binding Editor';
+    resetBindingTitle();
     return;
   }
 
@@ -173,13 +223,13 @@ export function saveBinding() {
   document.getElementById('binding-form').hidden = true;
   document.getElementById('binding-editor-placeholder').hidden = false;
   document.getElementById('btn-delete-binding').hidden = true;
-  document.getElementById('binding-panel-title').textContent = 'Binding Editor';
+  resetBindingTitle();
 }
 
 export function deleteCurrentBinding() {
   if (!state.editingBinding || state.editingBinding.isNew) return;
 
-  const actionType = document.getElementById('bf-type').value;
+  const actionType = getSelectedType();
   if (actionType === 'layer') {
     const sl = store.sublayers(state.selectedTrigger).find(s => s.key === state.editingBinding.key);
     const label = sl ? sl.label : state.editingBinding.key.toUpperCase();

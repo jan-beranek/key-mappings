@@ -27,7 +27,15 @@ export function renderTree() {
     triggerNode.className = 'tree-node tree-node--level-0' + (isTriggerActiveLayout ? ' tree-node--active-layout' : '');
 
     const badge = document.createElement('span');
-    badge.className = 'tree-trigger-key';
+    let badgeClass = 'tree-trigger-key';
+    if (state.selectedTrigger === trigger.key && state.editingBinding) {
+      if (state.selectedSublayer !== null || (state.editingBinding.isLayer)) {
+        badgeClass += ' tree-trigger-key--sublayer';
+      } else {
+        badgeClass += ' tree-trigger-key--bound';
+      }
+    }
+    badge.className = badgeClass;
     badge.textContent = trigger.badge;
     triggerNode.appendChild(badge);
 
@@ -75,6 +83,8 @@ export function renderTree() {
 
     if (!isExpanded) continue;
 
+    const isActiveTrigger = state.selectedTrigger === trigger.key;
+
     // Level 1: Direct bindings as leaf nodes
     for (const b of triggerData.directBindings) {
       const leaf = document.createElement('div');
@@ -82,7 +92,10 @@ export function renderTree() {
       leaf.className = 'tree-node tree-node--level-1 tree-node--binding';
 
       const bKey = document.createElement('span');
-      bKey.className = 'tree-binding-key' + (isLeafEditing ? ' tree-binding-key--selected' : '');
+      let bKeyClass = 'tree-binding-key';
+      if (isLeafEditing) bKeyClass += ' tree-binding-key--selected';
+      else if (!isLeafEditing) bKeyClass += ' tree-binding-key--inactive';
+      bKey.className = bKeyClass;
       bKey.textContent = b.key.toUpperCase();
       leaf.appendChild(bKey);
 
@@ -104,12 +117,12 @@ export function renderTree() {
 
     // Level 1: Sublayers
     for (const sl of triggerData.sublayers) {
-      renderSublayerNode(container, trigger.key, sl.key, sl.label, sl.bindings);
+      renderSublayerNode(container, trigger.key, sl.key, sl.label, sl.bindings, isActiveTrigger);
     }
   }
 }
 
-function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings) {
+function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings, isActiveTrigger) {
   const nodeId = 'sublayer:' + triggerKey + ':' + (sublayerKey || '_direct');
   const isExpanded = expandedNodes.has(nodeId);
   const isEditingThisLayer = state.editingBinding && state.editingBinding.isLayer && state.editingBinding.key === sublayerKey && state.selectedTrigger === triggerKey;
@@ -123,7 +136,10 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings)
   // Key badge first (for vertical alignment with binding keys)
   if (sublayerKey !== null) {
     const keyEl = document.createElement('span');
-    keyEl.className = 'tree-key' + (isEditingThisLayer ? ' tree-key--selected' : '');
+    let keyClass = 'tree-key';
+    if (isEditingThisLayer) keyClass += ' tree-key--selected';
+    else if (!isActiveLayout && !isEditingThisLayer) keyClass += ' tree-key--inactive';
+    keyEl.className = keyClass;
     keyEl.textContent = sublayerKey;
     node.appendChild(keyEl);
   }
@@ -208,7 +224,10 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings)
         leaf.className = 'tree-node tree-node--level-2';
 
         const bKey = document.createElement('span');
-        bKey.className = 'tree-binding-key' + (isLeafEditing ? ' tree-binding-key--selected' : '');
+        let bKeyClass = 'tree-binding-key';
+        if (isLeafEditing) bKeyClass += ' tree-binding-key--selected';
+        else bKeyClass += ' tree-binding-key--inactive';
+        bKey.className = bKeyClass;
         bKey.textContent = b.key.toUpperCase();
         leaf.appendChild(bKey);
 
@@ -286,15 +305,6 @@ export function renderKeyGrid() {
     container.appendChild(rowDiv);
   }
 
-  // Update grid title
-  const title = document.getElementById('key-grid-title');
-  const triggerLabel = state.selectedTrigger === 'caps_lock' ? 'Caps Lock' : 'Tab';
-  if (isDirect) {
-    title.textContent = triggerLabel + ' + Key';
-  } else {
-    const sl = store.sublayers(state.selectedTrigger).find(s => s.key === state.selectedSublayer);
-    title.textContent = sl ? triggerLabel + ' + ' + sl.key.toUpperCase() + ' + Key (' + sl.label + ')' : 'Key Bindings';
-  }
 }
 
 function renderBindingEditor() {

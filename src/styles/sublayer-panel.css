@@ -80,6 +80,19 @@
   text-transform: uppercase;
   flex-shrink: 0;
   color: var(--text);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.tree-trigger-key--bound {
+  background: var(--key-bound);
+  border-color: var(--key-bound);
+  color: #fff;
+}
+
+.tree-trigger-key--sublayer {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 .tree-key {
@@ -99,11 +112,17 @@
   color: #fff;
   transition: box-shadow 0.12s;
 }
-.tree-node:hover .tree-key {
+.tree-node:hover .tree-key:not(.tree-key--selected) {
   box-shadow: 0 0 0 2px var(--accent-light);
 }
 .tree-key.tree-key--selected {
   box-shadow: 0 0 0 2px #000;
+}
+
+.tree-key--inactive {
+  background: var(--key-available);
+  border-color: var(--key-available-border);
+  color: var(--text-secondary);
 }
 
 .tree-label {
@@ -156,11 +175,17 @@
   color: #fff;
   transition: box-shadow 0.12s;
 }
-.tree-node:hover .tree-binding-key {
+.tree-node:hover .tree-binding-key:not(.tree-binding-key--selected) {
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 .tree-binding-key.tree-binding-key--selected {
   box-shadow: 0 0 0 2px #000;
+}
+
+.tree-binding-key--inactive {
+  background: var(--key-available);
+  border-color: var(--key-available-border);
+  color: var(--text-secondary);
 }
 
 .tree-binding-desc {

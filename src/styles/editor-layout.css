@@ -4,6 +4,10 @@
   height: 100vh;
 }
 
+#editor-view[hidden] {
+  display: none;
+}
+
 #editor-header {
   display: flex;
   align-items: center;

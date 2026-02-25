@@ -22,9 +22,11 @@
     <p class="subtitle">Paste your karabiner.json or rules array, edit visually, copy the result.</p>
     <textarea id="json-input" placeholder='Paste your karabiner.json or complex_modifications rules array here...'></textarea>
     <div id="paste-error" class="error-msg"></div>
+    <div id="paste-load"><button class="btn-primary" id="btn-load">Load JSON</button></div>
     <div id="paste-actions">
-      <button class="btn-primary" id="btn-load">Load Configuration</button>
-      <button class="btn-secondary" id="btn-new">New Configuration</button>
+      <button class="btn-secondary" id="btn-example-simple">Simple Example</button>
+      <button class="btn-secondary" id="btn-example-full">Full Example</button>
+      <button class="btn-secondary" id="btn-new">Start from Scratch</button>
     </div>
   </div>
 
@@ -46,7 +48,6 @@
 
       <div id="main-panel">
         <div id="key-grid">
-          <div id="key-grid-title">Key Bindings</div>
           <div id="key-grid-rows"></div>
         </div>
 
@@ -60,16 +61,12 @@
               Select a binding from the tree to edit, or click a key in the grid to add one.
             </div>
             <div id="binding-form" hidden>
-              <div class="form-row">
-                <label>Key</label>
-                <input id="bf-key" maxlength="1" placeholder="Key">
-                <label>Type</label>
-                <select id="bf-type">
-                  <option value="app">Open App</option>
-                  <option value="shell">Shell Command</option>
-                  <option value="key">Key Combo</option>
-                  <option value="layer">Activate Layer</option>
-                </select>
+              <input type="hidden" id="bf-key">
+              <div id="bf-type-tabs" class="type-tabs">
+                <button class="type-tab active" data-type="app">Open App</button>
+                <button class="type-tab" data-type="shell">Shell Command</button>
+                <button class="type-tab" data-type="key">Key Combo</button>
+                <button class="type-tab" data-type="layer">Activate Layer</button>
               </div>
               <div class="form-row">
                 <label id="bf-value-label">Value</label>

@@ -5,6 +5,7 @@ import { serializeConfig } from './serializer.js';
 import { render } from './renderer.js';
 import { closeBindingForm, saveBinding, updateValuePlaceholder, clearModifierCheckboxes, deleteCurrentBinding } from './binding-form.js';
 import { showToast } from './dialogs.js';
+import { SIMPLE_EXAMPLE, FULL_EXAMPLE, getPresetJSON } from './example-presets.js';
 
 function showPasteView() {
   document.getElementById('paste-view').hidden = false;
@@ -74,23 +75,37 @@ function init() {
     showPasteView();
   });
 
+  // Example preset buttons — load directly into editor
+  document.getElementById('btn-example-simple').addEventListener('click', () => {
+    const config = parseRules(SIMPLE_EXAMPLE);
+    store.load(config);
+    showEditorView();
+  });
+  document.getElementById('btn-example-full').addEventListener('click', () => {
+    const config = parseRules(FULL_EXAMPLE);
+    store.load(config);
+    showEditorView();
+  });
+
   // Binding form events
   document.getElementById('btn-save-binding').addEventListener('click', saveBinding);
   document.getElementById('btn-cancel-binding').addEventListener('click', closeBindingForm);
   document.getElementById('btn-delete-binding').addEventListener('click', () => {
     deleteCurrentBinding();
   });
-  document.getElementById('bf-type').addEventListener('change', (e) => {
-    updateValuePlaceholder(e.target.value);
-    clearModifierCheckboxes();
-  });
+  // Type tab buttons
+  for (const tab of document.querySelectorAll('#bf-type-tabs .type-tab')) {
+    tab.addEventListener('click', () => {
+      for (const t of document.querySelectorAll('#bf-type-tabs .type-tab')) t.classList.remove('active');
+      tab.classList.add('active');
+      updateValuePlaceholder(tab.dataset.type);
+      clearModifierCheckboxes();
+    });
+  }
 
   // Enter key in binding form
   document.getElementById('bf-value').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') saveBinding();
-  });
-  document.getElementById('bf-key').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('bf-value').focus();
   });
 
 }
