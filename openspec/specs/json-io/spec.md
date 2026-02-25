@@ -15,6 +15,10 @@ The system SHALL provide a textarea where the user can paste Karabiner complex m
 - **WHEN** user pastes text that is not valid JSON
 - **THEN** the system displays an inline error message indicating the JSON is invalid and does not modify any existing editor state
 
+#### Scenario: Initial paste view shows only JSON input area
+- **WHEN** the application loads or the user returns to the paste view via "Start Over"
+- **THEN** the paste view SHALL display only the title, subtitle, JSON textarea, error message area, and action buttons — no editor UI (key grid, binding panel, layer tree) SHALL be visible
+
 ### Requirement: Copy JSON output
 The system SHALL provide a way for the user to copy the edited configuration back as valid Karabiner JSON.
 
