@@ -30,10 +30,13 @@ export function normalizeInput(text) {
 export function parseRules(rules) {
   const config = createDefaultConfig();
 
+  // Flatten single-rule-with-mixed-manipulators into logical rules
+  const expanded = rules.flatMap(splitFlatRule);
+
   // Track which trigger key each hyper variable belongs to
   const hyperVarToTrigger = new Map();
 
-  for (const rule of rules) {
+  for (const rule of expanded) {
     if (!rule.manipulators || !Array.isArray(rule.manipulators)) {
       config.passThroughRules.push(rule);
       continue;
@@ -151,6 +154,76 @@ export function parseRules(rules) {
   }
 
   return config;
+}
+
+function splitFlatRule(rule) {
+  const manips = rule.manipulators;
+  if (!manips || manips.length <= 1) return [rule];
+
+  // Check if this rule mixes different types (hyper activator + bindings)
+  const hyperManips = [];
+  const sublayerGroups = new Map(); // sublayerVar -> { activator, bindings }
+  const directManips = [];
+
+  for (const m of manips) {
+    const setVars = getSetVariables(m);
+    let classified = false;
+
+    for (const sv of setVars) {
+      if (/^hyper(_\w+)?$/.test(sv.name) && sv.value === 1) {
+        const fromKey = m.from?.key_code;
+        if (fromKey === 'caps_lock' || fromKey === 'tab') {
+          hyperManips.push(m);
+          classified = true;
+          break;
+        }
+      }
+      const slMatch = sv.name.match(/^(hyper(?:_\w+)?)_sublayer_(.+)$/);
+      if (slMatch && sv.value === 1) {
+        if (!sublayerGroups.has(sv.name)) sublayerGroups.set(sv.name, { activator: null, bindings: [] });
+        sublayerGroups.get(sv.name).activator = m;
+        classified = true;
+        break;
+      }
+    }
+    if (classified) continue;
+
+    // Check if it's a sublayer binding (has sublayer condition)
+    let isSublayerBinding = false;
+    for (const c of (m.conditions || [])) {
+      if (c.type === 'variable_if') {
+        const slMatch = c.name.match(/^(hyper(?:_\w+)?)_sublayer_(.+)$/);
+        if (slMatch && c.value === 1) {
+          if (!sublayerGroups.has(c.name)) sublayerGroups.set(c.name, { activator: null, bindings: [] });
+          sublayerGroups.get(c.name).bindings.push(m);
+          isSublayerBinding = true;
+          break;
+        }
+      }
+    }
+    if (!isSublayerBinding) directManips.push(m);
+  }
+
+  // If nothing was split, return the original rule as-is
+  if (hyperManips.length === 0 && sublayerGroups.size === 0) return [rule];
+
+  const result = [];
+  for (const m of hyperManips) {
+    result.push({ description: m.description || rule.description || 'Hyper Key', manipulators: [m] });
+  }
+  for (const [, group] of sublayerGroups) {
+    const grouped = [];
+    if (group.activator) grouped.push(group.activator);
+    grouped.push(...group.bindings);
+    if (grouped.length > 0) {
+      const desc = group.activator?.description || rule.description || 'Sublayer';
+      result.push({ description: desc, manipulators: grouped });
+    }
+  }
+  if (directManips.length > 0) {
+    result.push({ description: 'Direct bindings', manipulators: directManips });
+  }
+  return result.length > 0 ? result : [rule];
 }
 
 function getSetVariables(manipulator) {

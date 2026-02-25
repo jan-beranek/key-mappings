@@ -53,7 +53,8 @@ function init() {
   // Copy JSON button
   document.getElementById('btn-copy').addEventListener('click', () => {
     const rules = serializeConfig(store.config);
-    const json = JSON.stringify(rules, null, 4);
+    const allManipulators = rules.flatMap(r => r.manipulators);
+    const json = JSON.stringify({ description: "Hyper Key Configuration", manipulators: allManipulators }, null, 4);
     navigator.clipboard.writeText(json).then(() => {
       showToast('JSON copied to clipboard!');
     }).catch(() => {

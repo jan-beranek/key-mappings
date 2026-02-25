@@ -72,6 +72,27 @@ export class ConfigStore extends EventTarget {
     return false;
   }
 
+  reorderBinding(triggerKey, sublayerKey, bindingKey, newIndex) {
+    const bindings = this._getBindings(triggerKey, sublayerKey);
+    const oldIndex = bindings.findIndex(b => b.key === bindingKey);
+    if (oldIndex < 0 || oldIndex === newIndex) return;
+    const [binding] = bindings.splice(oldIndex, 1);
+    bindings.splice(newIndex, 0, binding);
+    this._emit();
+  }
+
+  moveBinding(fromTrigger, fromSublayer, bindingKey, toTrigger, toSublayer) {
+    const srcBindings = this._getBindings(fromTrigger, fromSublayer);
+    const idx = srcBindings.findIndex(b => b.key === bindingKey);
+    if (idx < 0) return false;
+    const destBindings = this._getBindings(toTrigger, toSublayer);
+    if (destBindings.some(b => b.key === bindingKey)) return false;
+    const [binding] = srcBindings.splice(idx, 1);
+    destBindings.push(binding);
+    this._emit();
+    return true;
+  }
+
   deleteBinding(triggerKey, sublayerKey, bindingKey) {
     if (sublayerKey === null) {
       const t = this.triggers[triggerKey];

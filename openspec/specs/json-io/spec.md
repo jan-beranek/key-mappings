@@ -1,11 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Paste JSON input
-The system SHALL provide a textarea where the user can paste Karabiner complex modification JSON (the `rules` array from `profiles[].complex_modifications.rules`).
+The system SHALL provide a textarea where the user can paste Karabiner complex modification JSON in any of the supported formats.
 
-#### Scenario: User pastes valid rules JSON
+#### Scenario: User pastes valid rules JSON array
 - **WHEN** user pastes a valid JSON array of Karabiner rules into the input textarea and clicks "Load"
 - **THEN** the system parses the JSON and populates the editor with recognized hyper key and sublayer configurations
+
+#### Scenario: User pastes single rule object (flat format)
+- **WHEN** user pastes a single JSON object with `description` and `manipulators` keys (the format produced by this tool and accepted by Karabiner-Elements import)
+- **THEN** the system splits mixed manipulators into logical groups (hyper activators, sublayer activators with their bindings, direct bindings) and populates the editor
 
 #### Scenario: User pastes full karabiner.json
 - **WHEN** user pastes a complete `karabiner.json` file (with `global`, `profiles`, etc.)
@@ -24,7 +28,7 @@ The system SHALL provide a way for the user to copy the edited configuration bac
 
 #### Scenario: User copies edited rules
 - **WHEN** user clicks "Copy JSON" after editing
-- **THEN** the system copies the full `rules` array (including both edited hyper/sublayer rules and unmodified pass-through rules) to the clipboard as formatted JSON
+- **THEN** the system copies a single rule object (`{"description": "...", "manipulators": [...]}`) containing all manipulators to the clipboard as formatted JSON, compatible with Karabiner-Elements import
 
 #### Scenario: Output preserves unrecognized rules
 - **WHEN** the pasted input contained rules not recognized as hyper/sublayer patterns
@@ -50,8 +54,8 @@ The system SHALL generate valid Karabiner Elements JSON from the editor state.
 
 #### Scenario: Generated JSON is structurally valid
 - **WHEN** the user copies the output JSON
-- **THEN** the output is a valid JSON array of rule objects conforming to the Karabiner complex modifications schema
+- **THEN** the output is a valid JSON object with `description` and `manipulators` keys, conforming to the Karabiner complex modifications rule schema
 
 #### Scenario: Round-trip fidelity for unmodified config
 - **WHEN** user pastes JSON, makes no edits, and copies output
-- **THEN** the output JSON SHALL be semantically equivalent to the input (same rules, same structure; formatting may differ)
+- **THEN** the output JSON SHALL be semantically equivalent to the input (same manipulators and behavior; the structural grouping into a single flat rule and formatting may differ from the input)

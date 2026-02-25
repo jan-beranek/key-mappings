@@ -1,6 +1,7 @@
 import { store, state, expandedNodes, KEY_ROWS } from './state.js';
 import { describeAction } from './serializer.js';
 import { openAddBinding, openEditBinding, openEditSublayer, closeBindingForm } from './binding-form.js';
+import { makeBindingDraggable, makeBindingDropZone, makeParentDropZone } from './drag-drop.js';
 
 export function render() {
   renderTree();
@@ -79,6 +80,8 @@ export function renderTree() {
       render();
     };
 
+    makeParentDropZone(triggerNode, trigger.key, null);
+
     container.appendChild(triggerNode);
 
     if (!isExpanded) continue;
@@ -86,7 +89,8 @@ export function renderTree() {
     const isActiveTrigger = state.selectedTrigger === trigger.key;
 
     // Level 1: Direct bindings as leaf nodes
-    for (const b of triggerData.directBindings) {
+    for (let di = 0; di < triggerData.directBindings.length; di++) {
+      const b = triggerData.directBindings[di];
       const leaf = document.createElement('div');
       const isLeafEditing = state.editingBinding && state.editingBinding.key === b.key && state.selectedSublayer === null && state.selectedTrigger === trigger.key;
       leaf.className = 'tree-node tree-node--level-1 tree-node--binding';
@@ -111,6 +115,10 @@ export function renderTree() {
         openEditBinding(b);
         render();
       };
+
+      makeBindingDraggable(leaf, trigger.key, null, b.key);
+      const capturedIdx = di;
+      makeBindingDropZone(leaf, trigger.key, null, b.key, () => capturedIdx);
 
       container.appendChild(leaf);
     }
@@ -208,6 +216,8 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings,
     render();
   };
 
+  makeParentDropZone(node, triggerKey, sublayerKey);
+
   container.appendChild(node);
 
   // Level 2: Binding leaves (if expanded)
@@ -218,7 +228,8 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings,
       empty.textContent = 'No bindings';
       container.appendChild(empty);
     } else {
-      for (const b of bindings) {
+      for (let bi = 0; bi < bindings.length; bi++) {
+        const b = bindings[bi];
         const leaf = document.createElement('div');
         const isLeafEditing = state.editingBinding && state.editingBinding.key === b.key && state.selectedSublayer === sublayerKey && state.selectedTrigger === triggerKey;
         leaf.className = 'tree-node tree-node--level-2';
@@ -243,6 +254,10 @@ function renderSublayerNode(container, triggerKey, sublayerKey, label, bindings,
           openEditBinding(b);
           render();
         };
+
+        makeBindingDraggable(leaf, triggerKey, sublayerKey, b.key);
+        const capturedIdx = bi;
+        makeBindingDropZone(leaf, triggerKey, sublayerKey, b.key, () => capturedIdx);
 
         container.appendChild(leaf);
       }
